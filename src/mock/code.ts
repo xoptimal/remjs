@@ -26,6 +26,6 @@ export default function sub1() {
 
     const arr = ['1', '2', '3']
 
-    return arr.map(item => <div key={item} className="w-[400px] h-[30px] mb-1 bg-[#ff4785] text-2xl">REM DEMO</div>)
+    return arr.map(item => <div key={item} className="w-[400px] h-[30px] mb-1 bg-[#ff4785] text-[20px] font-bold text-primary-color">REM DEMO</div>)
 }
-`
+`;

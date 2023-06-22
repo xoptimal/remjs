@@ -1,45 +1,43 @@
-import React, {useMemo} from "react";
-import {TextField} from "@mui/material";
-import {ChevronDown} from 'lucide-react'
-import {Dropdown} from "antd";
+import React from "react";
+import { TextField } from "@mui/material";
 import useDebouncedValueHook from "@/core/hooks/useDebouncedValueHook";
+import RemDropdown from "@/components/DropDown";
 
 type InputItemProps = {
-    items?: any[]
-    placeholder?: string
-    stylePrefix?: string
-    value?: string
-}
+  items?: Record<string, string>;
+  placeholder?: string;
+  tailwindPrefix: string;
+  value?: string;
+};
+
 export default function InputItem(props: InputItemProps) {
+  const { placeholder, items = [], tailwindPrefix } = props;
 
-    const {placeholder, items = [], stylePrefix} = props
+  const [value, setValue] = useDebouncedValueHook({
+    tailwindPrefix,
+    items,
+  });
 
-    const [value, handleInput] = useDebouncedValueHook({stylePrefix})
+  const endAdornment = (
+    <RemDropdown
+      items={items}
+      value={value}
+      setValue={setValue}
+      tailwindPrefix={tailwindPrefix}
+    />
+  );
 
-    const onSelect = ({selectedKeys}: { selectedKeys: string[] }) => {
-        console.log("selectedKeys", selectedKeys)
-        const key = selectedKeys[0]
-    }
-
-    const endAdornment = useMemo(() => {
-        return (
-            <Dropdown menu={{items, selectable: true, onSelect}}>
-                <ChevronDown className={"cursor-pointer"} size={16}/>
-            </Dropdown>
-        )
-    }, [items])
-
-    return (
-        <TextField
-            size={"small"}
-            label={placeholder}
-            className="rem-text-field"
-            value={value}
-            onChange={handleInput}
-            InputLabelProps={{
-                shrink: value.toString().length > 0,
-            }}
-            InputProps={{className: "h-[30px]", endAdornment}}>
-        </TextField>
-    )
+  return (
+    <TextField
+      size={"small"}
+      label={placeholder}
+      className="rem-text-field"
+      value={value}
+      onInput={setValue}
+      InputLabelProps={{
+        shrink: value.toString().length > 0,
+      }}
+      InputProps={{ className: "h-[30px]", endAdornment }}
+    ></TextField>
+  );
 }

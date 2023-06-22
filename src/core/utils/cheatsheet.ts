@@ -17832,7 +17832,7 @@ const CheatSheet = [
             {
                 "title": "Appearance",
                 "docs": "https://tailwindcss.com/docs/appearance",
-                "description": "Disables native styling based on the operating system's theme.",
+                "description": "Disables native styling based on the operating system's theme.ts.",
                 "table": [
                     [
                         ".appearance-none",

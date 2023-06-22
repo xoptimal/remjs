@@ -3,7 +3,7 @@ import MPPanel from './MPPanel'
 import LayoutPanel from './LayoutPanel'
 import BorderPanel from './BorderPanel'
 import VisibilityPanel from './VisibilityPanel'
-import TextPanel from './TextPanel'
+import Typography from './Typography'
 
 export {
     BackgroundPanel,
@@ -11,5 +11,5 @@ export {
     LayoutPanel,
     BorderPanel,
     VisibilityPanel,
-    TextPanel
+    Typography
 }

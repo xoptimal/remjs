@@ -11,7 +11,7 @@ import {Button, Collapse, Tabs} from "antd";
 import React, {useMemo} from "react";
 import Layers from "../Layers";
 import Content from "@/core/components/Content";
-import {BackgroundPanel, BorderPanel, LayoutPanel, MPPanel, TextPanel, VisibilityPanel} from "@/core/components/Panel";
+import {BackgroundPanel, BorderPanel, LayoutPanel, MPPanel, Typography, VisibilityPanel} from "@/core/components/Panel";
 
 function IconText(props: { icon: React.ReactNode, text: string }) {
     const {icon, text} = props;
@@ -62,7 +62,7 @@ export default function Layout(props: any) {
                 {/*    <BackgroundPanel/>*/}
                 {/*</Panel>*/}
                 <Panel header="Typography" key="Typography">
-                    <TextPanel/>
+                    <Typography />
                 </Panel>
                 {/*<Panel header="Margin & Padding" key="Margin & Padding">*/}
                 {/*    <MPPanel/>*/}
