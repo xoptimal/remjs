@@ -35,7 +35,7 @@ export default function ColorSelect(props: any) {
       <ColorPicker value={value} onChange={(value, hex) => setValue(hex)}>
         <div className={"flex"}>
           <div
-            className={`w-[77px] h-[30px] rounded-l-[6px] border-r-[1px] border-[#d9d9d9]`}
+            className={`w-[40%] h-[30px] rounded-l-[6px] border-r-[1px] border-[#d9d9d9]`}
             style={{ backgroundColor: items[value] || value || defaultColor }}
           />
           <Input

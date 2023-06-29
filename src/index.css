@@ -47,6 +47,10 @@
     outline: 0 none;
 }
 
+.rem-text-field {
+    width: 100%;
+}
+
 .rem-text-field div:hover fieldset {
     border-width: 1px !important;
     border-color: #4096ff !important;
@@ -63,4 +67,9 @@
     top: 0;
     margin: 0;
     padding-bottom: -314px;
+}
+
+input[type='file'] {
+    cursor: pointer;
+    font-size: 0;
 }

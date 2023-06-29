@@ -131,16 +131,23 @@ export default function NodeFactory(
     const tTarget = getTarget();
     if (!tTarget) return;
 
+    console.log("className", className);
+    console.log("mutuallyExclusives", mutuallyExclusives);
+
     setElements((draft: any) => {
-      const arr = [...draft[tTarget.id].className].filter(
+      let arr = [...draft[tTarget.id].className].filter(
         (className) =>
           mutuallyExclusives?.findIndex(
             (find: string) => find === className
           ) === -1
       );
-
       if (className) {
-        arr.push(className); //  添加
+        if (Array.isArray(className)) {
+          arr.push(...className);
+        } else {
+          arr.push(className);
+        }
+        arr = [...new Set(arr)];
       }
 
       //  update
@@ -194,51 +201,7 @@ export default function NodeFactory(
     const formatCode = recast.print(ast).code;
   };
 
-  const onRemoveTarget = ({ className }: { className: string }) => {
-    const tTarget = getTarget();
-    if (!tTarget) return;
-
-    setElements((draft: any) => {
-      const arr = [...draft[tTarget.id].className].filter(
-        (value) => value !== className
-      );
-      draft[tTarget.id].className = arr;
-      draft[tTarget.id].style = twj(arr, { minify: true, merge: false });
-      setTarget({ ...tTarget, ...draft[tTarget.id] });
-      return draft;
-    });
-  };
-  const onRemoveAllStyle = (style: string) => {
-    // @ts-ignore
-    setElements((draft: any) => {
-      const tTarget = getTarget();
-      if (tTarget && style) {
-        const temp = { ...draft[tTarget.id].style };
-        const newStyle: any = {};
-        Object.keys(temp)
-          .filter((key) => key.indexOf(style) === -1)
-          .forEach((key) => {
-            newStyle[key] = temp[key];
-          });
-        draft[tTarget.id].style = newStyle;
-        setTarget({ ...tTarget, style: temp });
-      }
-      return draft;
-    });
-  };
-
   const emitter = useEventEmitter<string>();
-
-  const domChildren = useMemo(() => {
-    if (Array.isArray(childrenProps)) {
-      //  for
-      return traversalChildren(childrenProps, elements);
-    } else {
-      return React.Children.map(childrenProps, (child) =>
-        traversalChildren(child, elements)
-      );
-    }
-  }, [elements]);
 
   const handleSelect = (id: string) => {
     setTarget(elements[id] ? { ...elements[id], id } : null);
@@ -253,12 +216,16 @@ export default function NodeFactory(
         target,
         setTarget: handleSelect,
         onChange: onChangeTarget,
-        onRemove: onRemoveTarget,
-        onRemoveAll: onRemoveAllStyle,
         emitter,
       }}
     >
-      <Layout>{domChildren}</Layout>
+      <Layout>
+        {Array.isArray(childrenProps)
+          ? traversalChildren(childrenProps, elements)
+          : React.Children.map(childrenProps, (child) =>
+              traversalChildren(child, elements)
+            )}
+      </Layout>
     </NodeContext.Provider>
   );
 }

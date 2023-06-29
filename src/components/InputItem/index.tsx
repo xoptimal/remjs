@@ -8,22 +8,21 @@ type InputItemProps = {
   placeholder?: string;
   tailwindPrefix: string;
   value?: string;
+  itemsTransform?: (key: string, label: string) => any;
+  matchValue?: (key: string, label: string) => any;
 };
 
 export default function InputItem(props: InputItemProps) {
-  const { placeholder, items = [], tailwindPrefix } = props;
+  const { placeholder, itemsTransform } = props;
 
-  const [value, setValue] = useDebouncedValueHook({
-    tailwindPrefix,
-    items,
-  });
+  const [value, setValue] = useDebouncedValueHook(props);
 
   const endAdornment = (
     <RemDropdown
-      items={items}
       value={value}
       setValue={setValue}
-      tailwindPrefix={tailwindPrefix}
+      transform={itemsTransform}
+      {...props}
     />
   );
 

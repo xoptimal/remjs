@@ -20,6 +20,9 @@ type ThemeType = {
   letterSpacingItems: Record<string, string>;
   //  字体颜色
   colors: Record<string, string>;
+  //  边框样式
+  borderItems: Record<string, string>;
+  roundedItems: Record<string, string>;
 };
 
 const defaultTheme: ThemeType = {
@@ -74,6 +77,36 @@ const defaultTheme: ThemeType = {
     "leading-loose": "loose",
   },
   colors: config.theme.extend.colors,
+  borderItems: {
+    "border-solid": "solid",
+    "border-dashed": "dashed",
+    "border-dotted": "dotted",
+    "border-double": "double",
+    "border-hidden": "hidden",
+    "border-none": "none",
+  },
+  roundedItems: {
+    rounded: "rounded",
+    "rounded-md": "md",
+    "rounded-lg": "lg",
+    "rounded-full": "full",
+    "rounded-t-lg": "t-lg",
+    "rounded-r-lg": "r-lg",
+    "rounded-b-lg": "b-lg",
+    "rounded-l-lg": "l-lg",
+    "rounded-tl-lg": "tl-lg",
+    "rounded-tr-lg": "tr-lg",
+    "rounded-br-lg": "br-lg",
+    "rounded-bl-lg": "bl-lg",
+  },
+};
+
+export const createColorItems = (tailwindPrefix: string) => {
+  const temp: Record<string, string> = {};
+  for (const [key, value] of Object.entries(defaultTheme.colors)) {
+    temp[`${tailwindPrefix}-${key}`] = value;
+  }
+  return temp;
 };
 
 export default defaultTheme;

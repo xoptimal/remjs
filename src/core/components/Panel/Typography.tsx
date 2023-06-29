@@ -42,7 +42,7 @@ const fontStyles = [
   {
     icon: <Bold />,
     className: "font-bold",
-    mutuallyExclusives: theme.weightItems,
+    mutuallyExclusives: Object.keys(theme.weightItems),
   },
   {
     icon: <Italic />,
@@ -95,10 +95,9 @@ const colorItems = (() => {
   return temp;
 })();
 
-export default function Typography() {
-  const { target, onChange, onRemove } = useContext(NodeContext);
-
-  const IconItem = (item: any) => (
+export const IconItem = (item: any) => {
+  const { target, onChange } = useContext(NodeContext);
+  return (
     <Button
       key={item.className}
       style={groupItemStyle}
@@ -115,7 +114,9 @@ export default function Typography() {
       })}
     </Button>
   );
+};
 
+export default function Typography() {
   return (
     <Row gutter={[12, 12]}>
       {textStyles.map((item, index) => {

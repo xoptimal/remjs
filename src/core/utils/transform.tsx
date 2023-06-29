@@ -159,13 +159,21 @@ export const createElement: FuncType = (sourceCode = "") => {
   return { transformCode, node, elements, ast, sourceCode };
 };
 
-export function getIconColor(target: any, className: string) {
+export function getIconColor(
+  target: { className: string[] } | undefined,
+  className: string | string[]
+) {
   const color = "blue";
-  if (
-    target &&
-    target.className.findIndex((find: string) => find === className) > -1
-  ) {
-    return color;
+  if (target) {
+    if (Array.isArray(className)) {
+      const classNameSet = new Set(target.className);
+      const isSubset = className.every((item) => classNameSet.has(item));
+      return isSubset ? color : undefined;
+    }
+
+    if (target.className.includes(className)) {
+      return color;
+    }
   }
   return undefined;
 }

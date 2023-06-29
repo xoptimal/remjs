@@ -10,17 +10,27 @@ export function checkValue(value: string) {
   }
 }
 
-export function checkClassName(
-  className: string,
-  tailwindPrefix: string,
-  matchValue?: any
-) {
-  if (className.indexOf(tailwindPrefix) > -1) {
+export function checkClassName({
+  className,
+  tailwindPrefix,
+  matchValue,
+}: {
+  className: string;
+  tailwindPrefix: string;
+  parentTailwindPrefix?: string;
+  matchValue?: any;
+}) {
+  if (className.indexOf(`${tailwindPrefix}-`) > -1) {
     if (matchValue) {
       return matchValue(formatTailwindValue(className), tailwindPrefix);
     }
-    return className.lastIndexOf("[") > -1 && className.lastIndexOf("]") > -1;
+    return (
+      className.lastIndexOf("[") > -1 &&
+      className.lastIndexOf("]") > -1 &&
+      checkValue(formatTailwindValue(className))
+    );
   }
+
   return false;
 }
 
@@ -29,12 +39,15 @@ export function formatTailwindValue(className: string) {
 }
 
 export default function useDebouncedValueHook(props: any) {
-  const { tailwindPrefix, items = [], matchValue } = props;
+  const {
+    tailwindPrefix,
+    items = [],
+    matchValue,
+    parentTailwindPrefix,
+  } = props;
 
   const [value, setValue] = useState<any>("");
-
   const debouncedValue = useDebounce(value, { wait: 500 });
-
   const { target, onChange } = useContext(NodeContext);
 
   useEffect(() => {
@@ -42,14 +55,19 @@ export default function useDebouncedValueHook(props: any) {
       let findIndex = target.className.findIndex(
         (className) =>
           className === debouncedValue ||
-          className === `${tailwindPrefix}-[${debouncedValue}]`
+          className === `${tailwindPrefix}-[${debouncedValue}]` ||
+          className === `${parentTailwindPrefix}-[${debouncedValue}]`
       );
 
       if (findIndex == -1 && debouncedValue.length > 0) {
         let className;
         const mutuallyExclusives = target.className
           .filter((className) =>
-            checkClassName(className, tailwindPrefix, matchValue)
+            checkClassName({
+              className,
+              tailwindPrefix,
+              matchValue,
+            })
           )
           .concat(Object.keys(items));
 
@@ -57,7 +75,10 @@ export default function useDebouncedValueHook(props: any) {
           if (items[debouncedValue]) {
             //  录入的是常量
             className = debouncedValue;
-          } else {
+          } else if (
+            !matchValue ||
+            matchValue(debouncedValue, tailwindPrefix)
+          ) {
             className = `${tailwindPrefix}-[${debouncedValue}]`;
           }
         }
@@ -76,8 +97,23 @@ export default function useDebouncedValueHook(props: any) {
         value = target.className[findIndex];
       } else {
         findIndex = target.className.findIndex((className) =>
-          checkClassName(className, tailwindPrefix, matchValue)
+          checkClassName({
+            className,
+            tailwindPrefix,
+            matchValue,
+          })
         );
+
+        if (findIndex === -1 && parentTailwindPrefix) {
+          findIndex = target.className.findIndex((className) =>
+            checkClassName({
+              className,
+              tailwindPrefix: parentTailwindPrefix,
+              matchValue,
+            })
+          );
+        }
+
         if (findIndex > -1) {
           value = target.className[findIndex];
           //  格式化
