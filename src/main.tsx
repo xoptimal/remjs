@@ -1,14 +1,16 @@
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
-
-import "antd/dist/reset.css";
-import React from "react";
+import React, {useState} from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
+import mockCode from './mock/code'
+import Core from "@/index";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <App />
-);
+const App = () => {
+    const [code, setCode] = useState<string|undefined>()
+    return (
+        <div>
+            <button onClick={() => setCode(mockCode)}>mock code</button>
+            <Core code={code}/>
+        </div>
+    )
+}
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<App/>)

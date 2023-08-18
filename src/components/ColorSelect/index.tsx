@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, ColorPicker, Input } from "antd";
 import { ChevronDown } from "lucide-react";
-import useDebouncedValueHook from "@/core/hooks/useDebouncedValueHook";
+import useDebouncedValueHook from "@/hooks/useDebouncedValueHook";
 import RemDropdown from "@/components/DropDown";
 
 const matchValue = (value: string) =>

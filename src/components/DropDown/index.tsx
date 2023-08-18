@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Dropdown } from "antd";
 import { ChevronDown } from "lucide-react";
-import { checkClassName, checkValue } from "@/core/hooks/useDebouncedValueHook";
-import NodeContext from "@/core/context";
+import { checkClassName, checkValue } from "@/hooks/useDebouncedValueHook";
+import NodeContext from "@/context";
 import { MinusCircleOutlined } from "@ant-design/icons";
 
 const defaultItems: any[] = [

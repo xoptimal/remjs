@@ -1,6 +1,6 @@
 import React from "react";
 import { TextField } from "@mui/material";
-import useDebouncedValueHook from "@/core/hooks/useDebouncedValueHook";
+import useDebouncedValueHook from "@/hooks/useDebouncedValueHook";
 import RemDropdown from "@/components/DropDown";
 
 type InputItemProps = {

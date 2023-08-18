@@ -1,0 +1,145 @@
+import {
+    BlockOutlined,
+    CodeOutlined,
+    DesktopOutlined,
+    HighlightOutlined,
+    MobileOutlined,
+    PlusCircleOutlined,
+    TabletOutlined,
+} from "@ant-design/icons";
+import {Button, Collapse, Tabs} from "antd";
+import React from "react";
+import Layers from "../Layers";
+import {BackgroundPanel, Content, Panel, Typography} from "@/components";
+
+import './index.css'
+
+const {BorderPanel, LayoutPanel, MPPanel} = Panel
+const CollapsePanel = Collapse.Panel;
+
+function IconText(props: { icon: React.ReactNode; text: string }) {
+    const {icon, text} = props;
+    return (
+        <div className="flex items-center">
+            {icon}
+            <span>{text}</span>
+        </div>
+    );
+}
+
+const deviceList = [
+    {label: <DesktopOutlined/>, key: "pc", width: 1000},
+    {label: <TabletOutlined/>, key: "pad", width: 642},
+    {label: <MobileOutlined/>, key: "mobile", width: 375},
+];
+
+
+export default function Editor(props: any) {
+
+    const {treeData = []} = props;
+
+    const leftItems = [
+        {
+            label: <BlockOutlined/>,
+            key: "Layers",
+            children: <Layers treeData={treeData}/>,
+        },
+        {
+            label: <IconText icon={<PlusCircleOutlined/>} text={"组件"}/>,
+            key: "components",
+            children: <span></span>,
+        },
+    ];
+
+    const [rightActivities, setRightActivities] = React.useState<
+        string | string[]
+    >(["Border"]);
+
+
+    const rightItems = [
+        {
+            label: <CodeOutlined/>,
+            key: "components",
+            children: <span>123</span>,
+        },
+        {
+            label: <IconText icon={<HighlightOutlined/>} text={"样式"}/>,
+            key: "panel",
+            children: (
+                <Collapse activeKey={rightActivities} onChange={setRightActivities}>
+                    <CollapsePanel header="Layout" key="Layout">
+                        <LayoutPanel/>
+                    </CollapsePanel>
+                    {/* <Panel header="Visibility" key="Visibility">
+            <VisibilityPanel />
+          </Panel>*/}
+                    <CollapsePanel header="Background" key="Background">
+                        <BackgroundPanel/>
+                    </CollapsePanel>
+                    <CollapsePanel header="Typography" key="Typography">
+                        <Typography/>
+                    </CollapsePanel>
+                    <CollapsePanel header="Margin & Padding" key="Margin & Padding">
+                        <MPPanel/>
+                    </CollapsePanel>
+                    <CollapsePanel header="Border" key="Border">
+                        <BorderPanel/>
+                    </CollapsePanel>
+                </Collapse>
+            ),
+        },
+    ];
+
+    return (
+        <div className={"w-full h-full bg-white"}>
+            <div
+                className={
+                    "w-full h-50px flex items-center px-16px border-b-[1px] border-b-gray-200"
+                }
+            >
+                <span>REM</span>
+                <div className={"h-full flex-1"}>
+                    <Tabs
+                        centered
+                        className={"rem-device-tab"}
+                        defaultActiveKey="1"
+                        items={deviceList}
+                    />
+                </div>
+                <div>
+                    <Button type={"primary"} onClick={props.onSave}>
+                        SAVE
+                    </Button>
+                </div>
+            </div>
+            <div className={"flex"}>
+                <div
+                    className={
+                        "h-[calc(100vh-50px)] w-[370px] border-r-[1px] border-b-gray-200"
+                    }
+                >
+                    <Tabs
+                        className={"rem-device-tab border-b-[1px] border-b-gray-200"}
+                        defaultActiveKey="Layers"
+                        items={leftItems}
+                    />
+                </div>
+                <div className={"h-[calc(100vh-50px)] w-[calc(100vw-727px)]"}>
+                    <Content>{props.children}</Content>
+                </div>
+                <div
+                    className={
+                        "h-[calc(100vh-50px)] w-[357px] border-l-[1px] border-b-gray-200"
+                    }
+                >
+                    <Tabs
+                        style={{height: "calc(100vh - 50px)", overflow: "hidden"}}
+                        defaultActiveKey={"panel"}
+                        className={"rem-device-tab border-b-[1px] border-b-gray-200"}
+                        items={rightItems}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}

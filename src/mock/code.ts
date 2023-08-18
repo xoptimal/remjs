@@ -1,5 +1,5 @@
 export default `
-import React, { Fragment, useState } from "react";
+import React, {useEffect, useState} from "react";
 
 export default function sub1() {
 
@@ -13,14 +13,28 @@ export default function sub1() {
     const fun2 = () => {
         // do something ....
     }
+    
+    useEffect(() => {
+        console.log("sub1 init")
+    }, [])
 
     const [style, setStyle] = useState("w-[100px] h-[30px] mb-1 bg-[#eeee88]")
 
     const arr = ['1', '2', '3']
 
-    return <div>
-    <div className="w-[400px] h-[400px] bg-[#eeee88]">12312312</div>
-    {arr.map(item => <div key={item} className="w-[400px] h-[30px] mb-1 bg-[#ff4785] text-[20px] font-bold text-primary-color">REM DEMO</div>)}
+    return <div className={"w-500px bg-white"}>
+  
+    <div className={"bg-#888888 w-100px h-100px"}>red</div>
+    <div className={"bg-#ff00ff w-100px h-100px"}>yellow</div>
+    <div className={"bg-#f3f3f3 w-100px h-100px"}>green</div>
+    {
+        arr.map(item => <div key={item} className={value1}>{item}</div>)
+    }
+    <div>
+    {
+        arr.map(item => <div key={item} className={value1}>{item}</div>)
+    }
+    </div>
 </div>
 }
 `;
