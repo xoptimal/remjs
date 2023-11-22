@@ -38,8 +38,15 @@ div {
 
 .rem-input {
     box-sizing: border-box;
-    width: 100%;
-    background-color: transparent !important;
+    display: inline-block;
+    //background-color: transparent !important;
+    border: 0 none;
+    font-size: inherit !important;
+    padding: 0 !important;
+    background-color: #4096ff;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
 .rem-input:focus {

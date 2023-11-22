@@ -1,13 +1,8 @@
-import React, { Key, useContext, useEffect, useRef, useState } from "react";
-import NodeContext from "@/context";
-import { Tree, TreeProps } from "antd";
-import {traversalChildrenToTree} from "@/utils/transform";
+import React, {Key, useContext, useEffect, useRef, useState} from "react";
+import NodeContext, {EventType} from "@/context";
+import {Tree, TreeProps} from "antd";
 
 const { DirectoryTree } = Tree;
-
-let counter = 0;
-
-
 
 export default function Layers(props: any) {
   const { treeData } = props;
@@ -17,14 +12,10 @@ export default function Layers(props: any) {
 
   const { emitter, setTarget } = useContext(NodeContext);
 
-  emitter.useSubscription(
-    ({ type, nodeIds }: { type: string; nodeIds: string[] }) => {
-      if (type === "select-tree") {
+  emitter.useSubscription(({type, nodeIds}) => {
+      if (type === EventType.SELECT_TREE) {
         let arr: Key[] = [];
-
-        console.log("nodeIds", nodeIds);
-
-        nodeIds.forEach((item) => {
+        nodeIds?.forEach((item) => {
           if (Array.isArray(item)) {
             arr.push("group_" + item[0]);
             arr = arr.concat(item);
@@ -38,8 +29,8 @@ export default function Layers(props: any) {
   );
 
   const onSelect: TreeProps["onSelect"] = (keys) => {
-    let nodeIds = keys[0] === selectedKeys[0] ? [] : keys;
-    emitter.emit({ type: "select-node", nodeIds });
+    const nodeIds = keys[0] === selectedKeys[0] ? [] : keys;
+    emitter.emit({ type: EventType.SELECT_NODE, nodeIds });
     setSelectedKeys(nodeIds);
   };
 

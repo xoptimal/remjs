@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import ColorSelect from "@/components/ColorSelect";
 import theme from "@/utils/theme";
-import { getIconColor } from "@/utils/transform";
+import { getIconColor } from "@/helpers/core";
 
 const textStyles = [
   {

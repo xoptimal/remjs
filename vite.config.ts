@@ -5,11 +5,20 @@ import path, {resolve} from "path";
 import dts from 'vite-plugin-dts'
 import progress from 'vite-plugin-progress'
 import {viteStaticCopy} from 'vite-plugin-static-copy'
+import fs from "fs";
 
 // https://vitejs.dev/config/
 
-export default defineConfig((mode: ConfigEnv): UserConfig => {
+function readFileContent(filePath) {
+    try {
+        return fs.readFileSync(filePath, 'utf-8');
+    } catch (error) {
+        console.error('读取文件内容出错:', error);
+        return null;
+    }
+}
 
+export default defineConfig((mode: ConfigEnv): UserConfig => {
     return {
         // css: {},
         // apply: "serve",
@@ -23,19 +32,23 @@ export default defineConfig((mode: ConfigEnv): UserConfig => {
             },
         },
         // @ts-ignore
-        plugins: [unocss(), react(), progress(), dts({
+        plugins: [unocss(), react(), progress(),
+            dts({
             outDir: ['dist', 'types'],
             staticImport: true,
             rollupTypes: true,
             insertTypesEntry: true
-        }), viteStaticCopy({
-            targets: [
-                {
-                    src: './plugin.js',
-                    dest: ''
-                }
-            ]
-        })],
+        }), viteStaticCopy({targets: [{src: './plugin.js', dest: ''}]}),
+            {
+                name: 'rem-plugin-react', enforce: 'pre', apply: "serve", configureServer: (server) => {
+                    server.ws.on('rem:readFile', async (data, client) => {
+                        try {
+                            const fileContent = readFileContent(data.filePath)
+                            client.send('rem:getFileContent', {path: data.filePath, content: fileContent})
+                        } catch (error) {
+                        }
+                    })
+                }}],
         build: {
             sourcemap: true,
             lib: {

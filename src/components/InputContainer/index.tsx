@@ -1,62 +1,67 @@
-import React, { useContext, useRef, useState } from "react";
-import { cn } from "@/utils/utils";
+import React, {KeyboardEventHandler, useContext, useEffect, useState} from "react";
 import NodeContext from "@/context";
+import {Form, Input, Popover} from "antd";
 
 type InputContainerProps = {
-  style?: React.CSSProperties;
-  className?: string;
-  type: string; //  origin document type
-  id: string;
-  value?: string;
-  placeholder?: string;
+    style?: React.CSSProperties;
+    className?: string;
+    type: string; //  origin document type
+    id: string;
+    text?: string;
+    isFormElement?: boolean;
 };
 
-function InputContainer(props: InputContainerProps) {
-  const { id, value, placeholder, className } = props;
+function InputContainer(props: React.PropsWithChildren<InputContainerProps>) {
 
-  const [showEdit, setShowEdit] = useState(false);
+    const {id, text, isFormElement, className, children} = props;
 
-  const inputRef = useRef<HTMLInputElement>(null);
+    const {target, onChange} = useContext(NodeContext);
 
-  const { onChange } = useContext(NodeContext);
+    const [open, setOpen] = useState(false);
 
-  const handleDoubleClick = () => {
-    setShowEdit(true);
-  };
-
-  const handleBlur = () => {
-    const value = inputRef.current?.value;
-    //onChange()
-    setShowEdit(false);
-  };
-
-  const handleKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleBlur();
+    const onDoubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        if (target && target.id === id) setOpen(!open);
     }
-  };
 
-  return (
-    <div
-      key={id}
-      className={cn(className, "cursor-default")}
-      onDoubleClick={handleDoubleClick}
+    useEffect(() => {
+        if ((!target && open) || (target && target.id !== id)) setOpen(false)
+    }, [target])
+
+    const onPressEnter: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
+        const text = (event.target as HTMLTextAreaElement).value
+        setOpen(false);
+        onChange({text}, id)
+    }
+
+    const onBlur = () => {
+        setOpen(false);
+    }
+
+    const cloneElementProps: any = {
+        key: id,
+        onDoubleClick,
+        className,
+        onClick: () => {
+        }
+    }
+
+    if (isFormElement) {
+        cloneElementProps.placeholder = text;
+    } else {
+        cloneElementProps.children = text;
+    }
+
+    return <Popover
+        open={open}
+        trigger={"click"}
+        title={`Edit ${isFormElement ? 'Placeholder' : 'InnerText'}`}
+        content={open && (
+            <Input.TextArea className={"w-500px"} autoSize={{minRows: 4, maxRows: 6}} defaultValue={text} onPressEnter={onPressEnter} onBlur={onBlur}/>
+        )}
     >
-      {showEdit ? (
-        <input
-          className={"rem-input"}
-          onBlur={handleBlur}
-          autoFocus
-          ref={inputRef}
-          onKeyDown={handleKeydown}
-          placeholder={placeholder}
-          defaultValue={value}
-        />
-      ) : (
-        value || <span className={"text-[#9ca3af]"}>{placeholder}</span>
-      )}
-    </div>
-  );
+        {React.cloneElement(children as React.ReactElement, cloneElementProps)}
+    </Popover>
 }
 
 export default InputContainer;

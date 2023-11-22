@@ -2,7 +2,6 @@ import fs from 'fs';
 
 function readFileContent(filePath) {
     try {
-        console.log("filePath", filePath)
         return fs.readFileSync(filePath, 'utf-8');
     } catch (error) {
         console.error('读取文件内容出错:', error);
@@ -12,16 +11,28 @@ function readFileContent(filePath) {
 
 export default function remPlugin(options = {mainPath: '/src/main.tsx'}) {
     return [{
-        name: 'rem-plugin-react', enforce: 'pre', apply: "serve", configureServer: (server) => {
+        name: 'rem-plugin-react',
+        enforce: 'pre',
+        apply: "serve",
+        configureServer: (server) => {
             server.ws.on('rem:readFile', async (data, client) => {
                 try {
                     const fileContent = readFileContent(data.filePath)
-                    data.callback(fileContent)
-                    client.send('rem:getFileContent', {fileContent})
+                    client.send('rem:getFileContent', {path: data.filePath, content: fileContent})
                 } catch (error) {
                 }
             })
-        }, transform(code, id) {
+            server.ws.on('rem:writeFile', async (data, client) => {
+                fs.writeFile(data.filePath, data.newContent, (err) => {
+                    if (err) {
+                        client.send('rem:writeFileCallback', {code: -1, message: `Error writing file: ${err}`})
+                    } else {
+                        client.send('rem:writeFileCallback', {code: 0, message: 'File updated successfully'})
+                    }
+                });
+            })
+        },
+        transform(code, id) {
             if (id.indexOf(options.mainPath) > -1) {
                 const importStatement = `
                 import "@wishingjs/rem/dist/style.css";

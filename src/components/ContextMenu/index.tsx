@@ -29,7 +29,6 @@ const getPath = (fiber: Fiber) => {
 
 const getLayersForElement = (element: Element) => {
     let instance = getReactInstanceForElement(element);
-
     const layers: { name: string; path: string }[] = [];
     while (instance) {
         const path = getPath(instance);
@@ -42,7 +41,6 @@ const getLayersForElement = (element: Element) => {
         }
         instance = instance._debugOwner;
     }
-
     return layers;
 };
 
@@ -50,7 +48,6 @@ const getReactInstanceForElement = (element: Element): Fiber | undefined => {
     // Prefer React DevTools, which has direct access to `react-dom` for mapping `element` <=> Fiber
     if ("__REACT_DEVTOOLS_GLOBAL_HOOK__" in window) {
         const {renderers} = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
-
         for (const renderer of renderers.values()) {
             try {
                 const fiber = renderer.findFiberByHostInstance(element);
@@ -95,17 +92,24 @@ const clearOverlay = () => {
     currentTarget = undefined;
 };
 
-export default function ContextMenu({callback}: { callback: (code: string) => void }) {
+export type FileType = {
+    path: string, content: string
+}
+
+export type ContextMenuProps = {
+    onChange?: (file: FileType) => void
+}
+
+export default function ContextMenu(props: ContextMenuProps) {
+
+    const { onChange } = props;
 
     const {show} = useContextMenu({
         id: MENU_ID,
     });
 
     const handleItemClick: ItemProps["onClick"] = ({id}) => {
-        if (id) sever.readFile(id, content => {
-            console.log("xxxxxxxxxxxxxxx")
-            console.log(content)
-        })
+        if (id) sever.readFile(id)
     }
 
     useEffect(() => {
@@ -141,9 +145,8 @@ export default function ContextMenu({callback}: { callback: (code: string) => vo
             hasMenu = true;
         });
 
-        sever.addFileListener(file => {
-            console.log("file", file)
-            callback?.(file.content);
+        sever.addGetFileListener(file => {
+            onChange?.(file);
         })
     }, [])
 

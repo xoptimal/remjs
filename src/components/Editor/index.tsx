@@ -1,20 +1,11 @@
-import {
-    BlockOutlined,
-    CodeOutlined,
-    DesktopOutlined,
-    HighlightOutlined,
-    MobileOutlined,
-    PlusCircleOutlined,
-    TabletOutlined,
-} from "@ant-design/icons";
-import {Button, Collapse, Tabs} from "antd";
+import {BlockOutlined, CodeOutlined, HighlightOutlined, PlusCircleOutlined,} from "@ant-design/icons";
+import {Collapse, Tabs} from "antd";
 import React from "react";
 import Layers from "../Layers";
-import {BackgroundPanel, Content, Panel, Typography} from "@/components";
-
+import {BackgroundPanel, BorderPanel, Content, LayoutPanel, MPPanel, Typography} from "@/components";
 import './index.css'
+import ActionBar from "@/components/ActionBar";
 
-const {BorderPanel, LayoutPanel, MPPanel} = Panel
 const CollapsePanel = Collapse.Panel;
 
 function IconText(props: { icon: React.ReactNode; text: string }) {
@@ -27,12 +18,6 @@ function IconText(props: { icon: React.ReactNode; text: string }) {
     );
 }
 
-const deviceList = [
-    {label: <DesktopOutlined/>, key: "pc", width: 1000},
-    {label: <TabletOutlined/>, key: "pad", width: 642},
-    {label: <MobileOutlined/>, key: "mobile", width: 375},
-];
-
 
 export default function Editor(props: any) {
 
@@ -40,7 +25,7 @@ export default function Editor(props: any) {
 
     const leftItems = [
         {
-            label: <BlockOutlined/>,
+            label: <div><BlockOutlined/><span>图层</span></div>,
             key: "Layers",
             children: <Layers treeData={treeData}/>,
         },
@@ -54,7 +39,6 @@ export default function Editor(props: any) {
     const [rightActivities, setRightActivities] = React.useState<
         string | string[]
     >(["Border"]);
-
 
     const rightItems = [
         {
@@ -71,8 +55,8 @@ export default function Editor(props: any) {
                         <LayoutPanel/>
                     </CollapsePanel>
                     {/* <Panel header="Visibility" key="Visibility">
-            <VisibilityPanel />
-          </Panel>*/}
+                        <VisibilityPanel />
+                      </Panel>*/}
                     <CollapsePanel header="Background" key="Background">
                         <BackgroundPanel/>
                     </CollapsePanel>
@@ -90,55 +74,37 @@ export default function Editor(props: any) {
         },
     ];
 
+
     return (
-        <div className={"w-full h-full bg-white"}>
+        <div className={"flex"}>
+            <div className={"h-[calc(100vh-50px)] p-6px border-r-solid border-r-1px border-r-gray-200"}>
+                <ActionBar/>
+            </div>
             <div
                 className={
-                    "w-full h-50px flex items-center px-16px border-b-[1px] border-b-gray-200"
+                    "h-[calc(100vh-50px)] w-[370px] border-r-[1px] border-b-gray-200"
                 }
             >
-                <span>REM</span>
-                <div className={"h-full flex-1"}>
-                    <Tabs
-                        centered
-                        className={"rem-device-tab"}
-                        defaultActiveKey="1"
-                        items={deviceList}
-                    />
-                </div>
-                <div>
-                    <Button type={"primary"} onClick={props.onSave}>
-                        SAVE
-                    </Button>
-                </div>
+                <Tabs
+                    className={"rem-device-tab border-b-[1px] border-b-gray-200"}
+                    defaultActiveKey="Layers"
+                    items={leftItems}
+                />
             </div>
-            <div className={"flex"}>
-                <div
-                    className={
-                        "h-[calc(100vh-50px)] w-[370px] border-r-[1px] border-b-gray-200"
-                    }
-                >
-                    <Tabs
-                        className={"rem-device-tab border-b-[1px] border-b-gray-200"}
-                        defaultActiveKey="Layers"
-                        items={leftItems}
-                    />
-                </div>
-                <div className={"h-[calc(100vh-50px)] w-[calc(100vw-727px)]"}>
-                    <Content>{props.children}</Content>
-                </div>
-                <div
-                    className={
-                        "h-[calc(100vh-50px)] w-[357px] border-l-[1px] border-b-gray-200"
-                    }
-                >
-                    <Tabs
-                        style={{height: "calc(100vh - 50px)", overflow: "hidden"}}
-                        defaultActiveKey={"panel"}
-                        className={"rem-device-tab border-b-[1px] border-b-gray-200"}
-                        items={rightItems}
-                    />
-                </div>
+            <div className={"h-[calc(100vh-50px)] w-[calc(100vw-727px)] relative flex flex-col justify-center"}>
+                <Content>{props.children}</Content>
+            </div>
+            <div
+                className={
+                    "h-[calc(100vh-50px)] w-[357px] border-l-[1px] border-b-gray-200"
+                }
+            >
+                <Tabs
+                    style={{height: "calc(100vh - 50px)", overflow: "hidden"}}
+                    defaultActiveKey={"panel"}
+                    className={"rem-device-tab border-b-[1px] border-b-gray-200"}
+                    items={rightItems}
+                />
             </div>
         </div>
     );

@@ -13,25 +13,27 @@ import InputContainer from "./InputContainer";
 import InputItem from "./InputItem";
 import Layers from "./Layers";
 import ContextMenu from "./ContextMenu";
+import Movable from "./Movable";
+import CanvasModal from "./CanvasModal";
+import Guide from "./Guide";
 
-const Panel = {
+export {
     MPPanel,
     LayoutPanel,
     BorderPanel,
     VisibilityPanel,
-}
-
-export {
-    Panel,
     BackgroundPanel,
     Typography,
     Content,
-    Ball,
     ColorSelect,
     DropDown,
     Editor,
     InputContainer,
+    ContextMenu,
     InputItem,
     Layers,
-    ContextMenu,
+    Ball,
+    Movable,
+    CanvasModal,
+    Guide
 }

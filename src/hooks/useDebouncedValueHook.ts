@@ -96,9 +96,7 @@ export default function useDebouncedValueHook(props: any) {
   useEffect(() => {
     let value = "";
     if (target) {
-      let findIndex = target.className.findIndex(
-        (className) => items[className]
-      );
+      let findIndex = target.className.findIndex(className => items[className]);
       if (findIndex > -1) {
         value = target.className[findIndex];
       } else {
@@ -109,7 +107,6 @@ export default function useDebouncedValueHook(props: any) {
             matchValue,
           })
         );
-
         if (findIndex === -1 && parentTailwindPrefix) {
           findIndex = target.className.findIndex((className) =>
             checkClassName({
@@ -119,7 +116,6 @@ export default function useDebouncedValueHook(props: any) {
             })
           );
         }
-
         if (findIndex > -1) {
           value = target.className[findIndex];
           //  格式化

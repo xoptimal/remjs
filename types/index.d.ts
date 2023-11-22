@@ -1,15 +1,13 @@
-import { JSX as JSX_2 } from 'react/jsx-runtime';
+/// <reference types="react" />
 
 /**
  * 监听回调
  * @param callback
  */
-declare function addFileListener(callback: (file: FileType) => void): void;
+declare function addGetFileListener(callback: (file: FileType) => void): void;
 
-declare const _default: (props: RemProps & {
-    data?: any;
-}) => JSX_2.Element;
-export default _default;
+declare const Ball: React.FC;
+export default Ball;
 
 declare type FileType = {
     path: string;
@@ -25,18 +23,16 @@ declare function init(hotObject: any): void;
 /**
  * 读取文件
  * @param filePath 文件路径
- * @param callback
  */
-declare function readFile(filePath: string, callback: (content: string) => void): void;
-
-declare interface RemProps {
-    code?: string;
-}
+declare function readFile(filePath: string): void;
 
 export declare const server: {
     init: typeof init;
     readFile: typeof readFile;
-    addFileListener: typeof addFileListener;
+    writeFile: typeof writeFile;
+    addGetFileListener: typeof addGetFileListener;
 };
+
+declare function writeFile(newContent: string, filePath: string, callback: (response: any) => void): void;
 
 export { }

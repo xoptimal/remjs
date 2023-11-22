@@ -8,11 +8,8 @@ import 'virtual:uno.css'
 import './runtime'
 
 import server from './server'
+import {Ball as Rem} from '@/components'
 
-import Rem from './core'
-
-export {
-    server
-}
+export {server}
 
 export default Rem

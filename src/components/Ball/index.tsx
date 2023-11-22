@@ -1,9 +1,12 @@
 import {Fragment, useCallback, useState} from "react";
 import {animated, config, useChain, useSpring, useSpringRef,} from '@react-spring/web'
 import {useGesture} from '@use-gesture/react'
-import styles from './index.module.css'
 import {Tooltip} from "antd";
-import ContextMenu from "@/components/ContextMenu";
+import Core from "@/core";
+import {ContextMenu} from "@/components";
+
+import styles from './index.module.css'
+import {ContextMenuProps, FileType} from "@/components/ContextMenu";
 
 const Ball: React.FC = () => {
 
@@ -44,7 +47,7 @@ const Ball: React.FC = () => {
                     width: `${window.innerWidth - 64}px`,
                     height: `${window.innerHeight - 64}px`,
                     background: 'white',
-                    borderRadius: '24px',
+                    borderRadius: '16px',
                 })
             } else {
                 await next({
@@ -64,8 +67,8 @@ const Ball: React.FC = () => {
             onClick: () => {
                 if (isDragging) {
                     setDragging(false)
-                } else {
-                    setOpen(!open)
+                } else if(!open){
+                    setOpen(true)
                     //showTooltip()
                 }
             },
@@ -107,12 +110,13 @@ const Ball: React.FC = () => {
     )
 
     const transApi = useSpringRef()
+
     const [transition] = useSpring({
         ref: transApi,
         immediate: true,
         from: {opacity: 0, scale: 0},
         to: {opacity: open ? 1 : 0, scale: open ? 1 : 0},
-        config: config.stiff
+        config: config.wobbly
     }, [open])
 
     useChain(open ? [ballRef, transApi] : [transApi, ballRef], [])
@@ -127,11 +131,15 @@ const Ball: React.FC = () => {
         }, 1000)
     }
 
-    const [code, setCode] = useState<string | undefined>()
+    const [file, setFile] = useState<FileType>()
 
-    const callback = (code: string) => {
-        setCode(code)
+    const onChange: ContextMenuProps["onChange"] = file => {
+        setFile(file)
         setOpen(!open)
+    }
+
+    const onCancel= () => {
+        setOpen(false)
     }
 
     return <Fragment>
@@ -142,10 +150,11 @@ const Ball: React.FC = () => {
                 {...bindGestures()}
             >
                 <animated.div style={transition}>
+                    <Core file={file} onCancel={onCancel} />
                 </animated.div>
             </animated.div>
         </Tooltip>
-        <ContextMenu callback={callback}/>
+        <ContextMenu onChange={onChange}/>
     </Fragment>
 };
 
