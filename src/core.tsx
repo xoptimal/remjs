@@ -7,10 +7,9 @@ import {
     createElement,
     createRectView,
     DataType,
-    deleteElementById,
     ElementType,
     save,
-    traversalChildren, traversalChildrenToTree
+    traversalChildren
 } from "@/helpers/core";
 import NodeContext, {EventProps, EventType, NodeContextType} from "./context";
 import {Button, Divider, message, Space} from "antd";
@@ -66,50 +65,58 @@ const Core: React.FC<CoreProps> = (props) => {
 
     const [loading, setLoading] = useState(false)
 
-    emitter.useSubscription(({type, data}) => {
+    emitter.useSubscription(({type, data, elements}) => {
 
-            if (type === EventType.ADD_REACT && elementsRef.current) {
+            if (!elementsRef.current) return
 
-                const firstPropertyId = Object.keys(elementsRef.current)[0];
-                const [id, element] = createRectView(firstPropertyId, data)
+            switch (type) {
+                case EventType.SAVE: {
+                    onSave(elements)
+                }
+                    break;
+                case EventType.ADD_REACT: {
+                    const firstPropertyId = Object.keys(elementsRef.current)[0];
+                    const [id, element] = createRectView(firstPropertyId, data)
 
-                setElements(prev => {
-                    const temp = {...prev}
-                    temp[firstPropertyId].children.push(element)
-                    temp[id] = element
+                    setElements(prev => {
+                        const temp = {...prev}
+                        temp[firstPropertyId].children.push(element)
+                        temp[id] = element
 
-                    //  sync
-                    elementsRef.current = temp;
-                    return temp;
-                })
+                        //  sync
+                        elementsRef.current = temp;
+                        return temp;
+                    })
 
-                //  wait 10ms update mouse point style
-                setTimeout(() => {
-                    // 选择当前目标
-                    emitter.emit({type: EventType.SELECT_NODE, nodeIds: [id], added: true})
-                }, 10)
+                    //  wait 10ms update mouse point style
+                    setTimeout(() => {
+                        // 选择当前目标
+                        emitter.emit({type: EventType.SELECT_NODE, nodeIds: [id], added: true})
+                    }, 10)
 
-                // if (target) {
-                //     setElements(prev => {
-                //         prev[target.id].children.push(element)
-                //         return prev;
-                //     })
-                // } else {
-                //     const firstPropertyId = Object.keys(elements)[0];
-                //     setElements(prev => {
-                //         prev[firstPropertyId].children.push(element)
-                //         return prev;
-                //     })
-                // }
+                    // if (target) {
+                    //     setElements(prev => {
+                    //         prev[target.id].children.push(element)
+                    //         return prev;
+                    //     })
+                    // } else {
+                    //     const firstPropertyId = Object.keys(elements)[0];
+                    //     setElements(prev => {
+                    //         prev[firstPropertyId].children.push(element)
+                    //         return prev;
+                    //     })
+                    // }
+                }
+                    break;
             }
         }
     );
 
-    useKeyPress('delete', () => {
-        if (target && target.parentId) {
-            // deleteElementById(elementsRef.current, target)
-        }
-    }, {events: ['keyup'], useCapture: true});
+    // useKeyPress('delete', () => {
+    //     if (target && target.parentId) {
+    //         // deleteElementById(elementsRef.current, target)
+    //     }
+    // }, {events: ['keyup'], useCapture: true});
 
     useAsyncEffect(async () => {
         if (data) {
@@ -133,10 +140,10 @@ const Core: React.FC<CoreProps> = (props) => {
         props.onCancel?.();
     }
 
-    const onSave = async () => {
+    const onSave = async (elements: any) => {
         setLoading(true)
         try {
-            const res = await save(data, elementsRef.current!)
+            const res = await save(data, elements)
             message.success(res.message)
             props.onCancel?.()
         } catch (e) {
@@ -147,7 +154,41 @@ const Core: React.FC<CoreProps> = (props) => {
 
     };
 
-    const handleChangeTarget: NodeContextType["onChange"] = (params, targetId) => {
+    function handleSave() {
+        emitter.emit({type: EventType.SYNC_ELEMENTS, elements: elementsRef.current})
+    }
+
+    const [historyList, setHistoryList] = useState<any[]>([])
+
+    useKeyPress('delete', () => {
+        if (target) {
+            console.log('1', target)
+            //  保存当前对象副本
+            setHistoryList(prev => [...prev, {...target}])
+
+            setElements(prev => {
+                //  标记已删除
+                prev[target.id].deleted = true
+
+                if (target.parentId) {
+                    const parent = prev[target.parentId]
+                    const index = parent.children.findIndex((child: any) => child.id === target.id)
+                    parent.children[index].deleted = true
+                }
+
+                return prev
+            })
+
+            //  取消选择
+            setTarget(null)
+
+            // 同步Movable
+            emitter.emit({type: EventType.SELECT_NODE, nodeIds: [], added: true})
+        }
+    }, {events: ['keyup'], useCapture: true});
+
+
+    const handleChangeTarget: NodeContextType["onChange"] = (params, targetId, callback) => {
 
         const {
             className,
@@ -183,9 +224,14 @@ const Core: React.FC<CoreProps> = (props) => {
             elementsRef.current![tTarget.id] = temp
             return draft;
         });
+
+        setTimeout(() => {
+            callback?.()
+        }, 50)
+
     };
 
-    const handleSetTarget = (id?: string) => {
+    const handleSetTarget = (id?: string,) => {
         // @ts-ignore
         setTarget(elementsRef.current[id] ? {...elementsRef.current[id], id} : null);
     };
@@ -199,6 +245,8 @@ const Core: React.FC<CoreProps> = (props) => {
     const content = useMemo(() => {
         return elements && traversalChildren(data.children, elements, {isRoot: true})
     }, [elements])
+
+    console.log("elements", elements)
 
     return (
         <NodeContext.Provider
@@ -234,7 +282,7 @@ const Core: React.FC<CoreProps> = (props) => {
                         <Button onClick={onCancel}>
                             取消
                         </Button>
-                        <Button type={"primary"} disabled={elements === null} onClick={onSave} loading={loading}>
+                        <Button type={"primary"} disabled={elements === null} onClick={handleSave} loading={loading}>
                             SAVE
                         </Button>
                     </Space>

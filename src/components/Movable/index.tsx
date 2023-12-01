@@ -6,8 +6,9 @@ import {GroupManager, TargetList} from "@moveable/helper";
 import {deepFlat} from "@daybrush/utils";
 import NodeContext, {EventType} from "@/context";
 import useKeyDown from "@/hooks/useKeyDown";
-import {useEventListener} from "ahooks";
+import {useEventListener, useKeyPress} from "ahooks";
 import {MouseDown} from "@/components/Content";
+import {formatTailwindValue} from "@/hooks/useDebouncedValueHook";
 
 const DimensionViewable = {
     name: "dimensionViewable",
@@ -42,17 +43,19 @@ type MovableProps = {
     contentStyle: React.CSSProperties
 }
 
+const snapContainer = '.rem-elements'
+
+
 export default function Movable(props: MovableProps) {
 
-    const {mousedown, contentStyle} = props;
+    const {contentStyle, mousedown} = props;
 
     const movableRef = React.useRef<ReactMovable>(null);
 
     const {emitter, target, setTarget} = useContext(NodeContext);
 
-    emitter.useSubscription(({type, nodeIds, added}) => {
+    emitter.useSubscription(({type, nodeIds, added, elements}) => {
             if (type === EventType.SELECT_NODE) {
-
                 if (added) {
                     init()
                 }
@@ -64,13 +67,37 @@ export default function Movable(props: MovableProps) {
                 //setTargets(filteredElements);
                 //setTarget(nodeIds?.[0] as string)
                 setSelectedTargets(filteredElements)
+
+            } else if (type === EventType.SYNC_ELEMENTS) {
+
+                const SelectableElements = selectoRef.current!.getSelectableElements();
+                const tElement = {...elements};
+
+                SelectableElements.forEach((dom: any) => {
+                    if (dom.style.transform) {
+                        const transform = dom.style.transform.match(/translate\((.*?)\)/);
+                        if (transform) {
+                            const [x, y] = transform[1].split(", ");
+                            const reactFiberKey = Object.keys(dom).find(key => key.indexOf("reactFiber") > -1)
+                            if (reactFiberKey && dom[reactFiberKey]) {
+                                let {key} = dom[reactFiberKey]
+                                if (key.lastIndexOf('/') > -1) key = key.substring(0, key.lastIndexOf('/'));
+                                const className = tElement[key].className as string[]
+                                const filter = className.filter(find => !find.includes('translate-x') && !find.includes('translate-y'));
+                                filter.push(`translate-x-[${x}]`, `translate-y-[${y}]`);
+                                tElement[key].className = filter
+                            }
+                        }
+                    }
+                })
+                emitter.emit({type: EventType.SAVE, elements: tElement})
             }
         }
     );
 
     const [frame, setFrame] = useState({translate: [0, 0], rotate: 0});
 
-    let [snapContainer, setSnapContainer] = useState<any>(null);
+    // let [snapContainer, setSnapContainer] = useState<any>(null);
 
     const {isKeyDown, key} = useKeyDown(["meta", "shift", "space"]);
 
@@ -78,48 +105,86 @@ export default function Movable(props: MovableProps) {
 
     const {onChange} = useContext(NodeContext);
 
-
-    function handleResizeStart(e: any) {
-        if (elementHasMouseEnter) {
-            console.log('handleResizeStart')
-            e.setOrigin(["%", "%"]);
-            e.dragStart.set(frame.translate);
-        }
-    }
+    // function handleResizeStart(e: any) {
+    //     if (elementHasMouseEnter) {
+    //         e.setOrigin(["%", "%"]);
+    //         e.dragStart.set(frame.translate);
+    //     }
+    // }
 
     function handleResize(e: any) {
-        const beforeTranslate = e.drag.beforeTranslate;
-        frame.translate = beforeTranslate;
         e.target.style.width = `${e.width}px`;
         e.target.style.height = `${e.height}px`;
-        e.target.style.transform = `translate(${beforeTranslate[0]}px, ${beforeTranslate[1]}px)`;
+        // e.target.style.transform = e.drag.transform;
     }
 
-    useEventListener('mousemove', (e) => {
-        if ((e.buttons === 1 || e.which === 1) && target) {
-            const width = e.clientX - mousedown.initialX;
-            const height = e.clientY - mousedown.initialY;
-            movableRef.current!.request("resizable", {
-                offsetWidth: width,
-                offsetHeight: height,
-            }, true);
+    useEventListener('mousemove', (event) => {
+        if ((event.buttons === 1 || event.which === 1) && target) {
+            const deltaX = event.clientX - mousedown.offsetX;
+            const deltaY = event.clientY - mousedown.offsetY;
+            console.log('2')
+            movableRef.current!.request("resizable", {offsetWidth: deltaX, offsetHeight: deltaY}, true);
         }
     }, {target: document.querySelector('#container')})
+
+    useEventListener(
+        'mouseup',
+        (event) => {
+            if (contentStyle.cursor === 'crosshair' && target) {
+                console.log('4')
+                emitter.emit({type: EventType.ACTION_MOVE})
+
+                const style = movableRef.current!.getDragElement()!.style
+                let translateX, translateY, width, height;
+                const mutuallyExclusives = target!.className.filter(find => find.indexOf('w-') > -1 || find.indexOf('h-') > -1)
+
+                if (style.height.length === 0 && style.width.length === 0) {    //  mouse not move
+
+                    const firstTranslateX = target?.className.find(find => find.indexOf('translate-x') > -1)!
+                    const firstTranslateY = target?.className.find(find => find.indexOf('translate-y') > -1)!
+
+                    console.log('firstTranslateX', firstTranslateX)
+                    console.log('firstTranslateY', firstTranslateY)
+
+                    translateX = parseFloat(formatTailwindValue(firstTranslateX)) - 50
+                    translateY = parseFloat(formatTailwindValue(firstTranslateY)) - 50
+
+                    width = 100;
+                    height = 100;
+
+                    mutuallyExclusives.push(firstTranslateX, firstTranslateY)
+
+                    const className = [`w-[${width}px]`, `h-[${height}px]`, `translate-x-[${translateX}px]`, `translate-y-[${translateY}px]`]
+
+                    onChange({className, mutuallyExclusives})
+
+                } else {    // mouse move
+                    width = style.width;
+                    height = style.height;
+                    const className = [`w-[${width}]`, `h-[${height}]`]
+                    onChange({className, mutuallyExclusives})
+                }
+            }
+        },
+        {target: document.querySelector('#container')},
+    );
+
 
     const selectoRef = React.useRef<Selector>(null);
 
     const groupManagerRef = React.useRef<GroupManager>();
 
-    const [elementGuidelines, setElementGuideLiens] = useState<HTMLElement[]>([]);
+    const [elementGuidelines, setElementGuideLiens] = useState<any[]>([]);
 
     function init() {
         const arr: any[] = [].slice.call(document.querySelectorAll(".rem-item"));
 
-        const container = document.querySelector(".rem-elements");
+        //const container = document.querySelector(".rem-elements");
+        //arr.push(container);
+        //setSnapContainer(container);
 
-        arr.push(container);
-        setSnapContainer(container);
-        setElementGuideLiens(arr);
+        setElementGuideLiens(arr)
+        //setElementGuideLiens(arr.map(item => ({element: item, refresh: true})))
 
         const elements = selectoRef.current!.getSelectableElements();
 
@@ -153,7 +218,7 @@ export default function Movable(props: MovableProps) {
 
     const setSelectedTargets = React.useCallback((nextTargets: any) => {
 
-        if(!nextTargets ||nextTargets.length === 0) {
+        if (!nextTargets || nextTargets.length === 0) {
             selectoRef.current!.setSelectedTargets([]);
             setTargets(nextTargets);
             setTarget();
@@ -198,16 +263,24 @@ export default function Movable(props: MovableProps) {
     }, []);
 
     const onResizeEnd = (resizeTarget: any) => {
+
+        if (contentStyle.cursor === 'crosshair') return
+
         const className = [
             `w-[${resizeTarget.style.width}]`,
             `h-[${resizeTarget.style.height}]`,
         ];
+
         onChange({
             className,
             mutuallyExclusives: target?.className.filter(
                 (find) => find.indexOf("w-") > -1 || find.indexOf("h-") > -1
             ),
+        }, null, () => {
+            resizeTarget.style.width = ''
+            resizeTarget.style.height = ''
         });
+
     };
 
     const elementHasMouseEnter = useRef(false)
@@ -221,6 +294,7 @@ export default function Movable(props: MovableProps) {
         },
     });
 
+
     return (
         <>
             <ReactMovable
@@ -228,7 +302,6 @@ export default function Movable(props: MovableProps) {
                 flushSync={flushSync} //  react> 18 开启
                 ref={movableRef} //  实例
                 target={targets} //  操作对象(moveable的对象)
-                draggable // 是否可以拖拽
                 throttleDrag={1} // 拖拽阈值 达到这个值才执行拖拽
                 edgeDraggable={["n", "s"]} // 是否通过拖动边缘线移动
                 startDragRotate={0}
@@ -247,6 +320,7 @@ export default function Movable(props: MovableProps) {
                     dimensionViewable: true,
                     enterLeave: true,
                 }}
+                transformOrigin={["left", "top"]}
                 preventClickDefault={true} //  传递下一层
                 onClickGroup={(e) => {
                     if (!e.moveableTarget) {
@@ -265,41 +339,45 @@ export default function Movable(props: MovableProps) {
                         selectoRef.current!.clickTarget(e.inputEvent, e.moveableTarget);
                     }
                 }}
-                onDrag={(e) => {
-                    //  操作单个target拖拽回调
+
+                draggable // 是否可以拖拽
+                onDrag={(e) => {    //  操作单个target拖拽回调
+                    //  当前Target是组, 则不允许移动,
                     if (e.target.className.indexOf("rem_group") > -1) {
                         e.stopDrag();
                     } else {
-                        e.target.style.position = `absolute`;
-                        e.target.style.left = `${e.left}px`;
-                        e.target.style.top = `${e.top}px`;
+                        // e.target.style.position = `absolute`;
+                        // e.target.style.left = `${e.left}px`;
+                        // e.target.style.top = `${e.top}px`;
+                        e.target.style.transform = e.transform;
                     }
                 }}
                 onDragEnd={(e) => {
-                    if (e.isDrag) {
-                        const leftValue = e.target.style.left;
-                        const topValue = e.target.style.top;
-                        const className = [];
-                        className.push(
-                            `absolute`,
-                            `top-[${topValue}]`,
-                            `left-[${leftValue}]`
-                        );
-                        onChange({
-                            className,
-                            mutuallyExclusives: target?.className.filter(
-                                (find) => find.indexOf("top") > -1 || find.indexOf("left") > -1 || find.indexOf("absolute") > -1),
-                        });
-                    }
+                    if (!e.isDrag) return
+                    // const [x, y] = e.inputEvent.translate
+                    // getChangeData({x, y})
+                    // const leftValue = e.target.style.left;
+                    // const topValue = e.target.style.top;
+                    // const className = [];
+                    // className.push(
+                    //     `absolute`,
+                    //     `top-[${topValue}]`,
+                    //     `left-[${leftValue}]`
+                    // );
+                    // onChange({
+                    //     className,
+                    //     mutuallyExclusives: target?.className.filter(
+                    //         (find) => find.indexOf("top") > -1 || find.indexOf("left") > -1 || find.indexOf("absolute") > -1),
+                    // });
                 }}
                 onDragGroup={(e) => {
                     //  操作组合(target)拖拽回调
-                    e.events.forEach((ev) => {
-                        // ev.target.style.transform = ev.transform;
-                        ev.target.style.position = `absolute`;
-                        ev.target.style.left = `${ev.left}px`;
-                        ev.target.style.top = `${ev.top}px`;
-                    });
+                    // e.events.forEach((ev) => {
+                    //     // ev.target.style.transform = ev.transform;
+                    //     ev.target.style.position = `absolute`;
+                    //     ev.target.style.left = `${ev.left}px`;
+                    //     ev.target.style.top = `${ev.top}px`;
+                    // });
                 }}
                 // onResizeGroupStart={({setMin, setMax}) => {
                 //     setMin([0, 0]);
@@ -318,7 +396,7 @@ export default function Movable(props: MovableProps) {
                 onResizeGroupEnd={({events}) => {
                     onResizeEnd(events[0].target);
                 }}
-                onResizeStart={handleResizeStart} // 缩放开始时
+                //onResizeStart={handleResizeStart} // 缩放开始时
                 displayAroundControls={true}
                 edge //resize,scale是否支持通过边框操作
                 controlPadding={0}

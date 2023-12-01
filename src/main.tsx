@@ -67,7 +67,8 @@ const App = () => {
     const onClick = () => {
         setCanvasData(null)
         setFile({
-            content: `import React, { useState } from 'react';
+            content: `
+            import React, { useState } from 'react';
 
 const Counter = () => {
     const [count, setCount] = useState(0);
@@ -86,20 +87,19 @@ const Counter = () => {
 
     return (
         <div className="w-393px h-852px bg-white">
-            <h2 className={a1}>Counter, sdas qwed,qdqwnindasdian asdas </h2>
+            <h2 className={a1}>Counter, sdas qwed,qdqwnindasdian asdas</h2>
             <p className={"bg-blue"}>{a1}=========123123=======<span>12312</span></p>
             <button className={style} onClick={increment}>Increment</button>
             <input placeholder="placeholder" />
             <button onClick={decrement}>Decrement</button>
-            <div className="w-100px h-100px bg-blue translate-x-120px translate-y-120px"></div>
-            <div className="w-100px h-100px bg-red translate-x-120px translate-y-120px"></div>
+            <div className="w-100px h-100px bg-red translate-x-55px translate-y-476px"></div>
+            <div className="w-100px h-100px bg-yellow translate-x-[251px] translate-y-[40px]"></div>
         </div>
     );
 };
 
 export default Counter;
-
-`, path: ''
+            `, path: ''
         })
     }
 

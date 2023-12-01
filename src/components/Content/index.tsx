@@ -9,7 +9,6 @@ import useKeyDown from "@/hooks/useKeyDown";
 import {Guide, Movable} from "@/components";
 import NodeContext, {EventType} from "@/context";
 import {useAsyncEffect, useEventListener, useGetState, useMouse} from "ahooks";
-import {checkClassName, formatTailwindValue} from "@/hooks/useDebouncedValueHook";
 
 const deviceList = [
     {label: <DesktopOutlined/>, key: "pc", width: 1000},
@@ -49,12 +48,13 @@ const defaultContentStyle: React.CSSProperties = {
     background: 'white',
     width: 'fit-content',
     cursor: "default",
+    position: "relative",
 }
 
 export type MouseDown = {
     down: boolean,
-    initialX: number,
-    initialY: number,
+    offsetX: number,
+    offsetY: number,
 }
 
 export default function Content(props: React.PropsWithChildren) {
@@ -168,46 +168,55 @@ export default function Content(props: React.PropsWithChildren) {
     }
 
 
-    const [mousedown, setMousedown] = useState<MouseDown>({down: false, initialX: 0, initialY: 0});
+    const [mousedown, setMousedown] = useState<MouseDown>({down: false, offsetX: 0, offsetY: 0});
 
     useEventListener(
         'mousedown',
         (e) => {
             if (contentStyle.cursor === 'crosshair') {
-                const position = {
-                    x: mouse.elementX,
-                    y: mouse.elementY
-                }
+
+                setMousedown({down: true, offsetX: e.clientX, offsetY: e.clientY})
+
+                const offsetX = e.clientX - contentRef.current!.getBoundingClientRect().left;
+                const offsetY = e.clientY - contentRef.current!.getBoundingClientRect().top;
+                const position = {x: offsetX, y: offsetY}
+
+                console.log('clientY', e)
+                console.log('contentRef.current!.getBoundingClientRect().left;', contentRef.current!.getBoundingClientRect())
+
+                console.log("position", position)
+
+                console.log('1')
+
                 emitter.emit({type: EventType.ADD_REACT, data: {position}})
-                setMousedown({
-                    down: true,
-                    initialX: e.clientX, // 设置初始 X 位置
-                    initialY: e.clientY, // 设置初始 Y 位置
-                })
+
+                e.preventDefault();
+
             }
         },
         {target: contentRef.current},
     );
 
-    useEventListener(
-        'mouseup',
-        (e) => {
-            if (contentStyle.cursor === 'crosshair') {
-                emitter.emit({type: EventType.ACTION_MOVE})
-                const hasW1pxAndH1px = target?.className.includes("w-1px") && target?.className.includes("h-1px");
-                if (hasW1pxAndH1px) {
-                    const left = target?.className.find(find => find.indexOf('left') > -1)
-                    const top = target?.className.find(find => find.indexOf('top') > -1)
-
-                    const leftValue = parseFloat(formatTailwindValue(left!))
-                    const topValue = parseFloat(formatTailwindValue(top!))
-
-                    onChange({className: ["w-100px", 'h-100px', `left-${leftValue - 50}px`, `top-${topValue - 50}px`], mutuallyExclusives: ['w-1px', 'h-1px', left!, top!]})
-                }
-            }
-        },
-        {target: contentRef.current},
-    );
+    // useEventListener(
+    //     'mouseup',
+    //     (e) => {
+    //         if (contentStyle.cursor === 'crosshair') {
+    //             emitter.emit({type: EventType.ACTION_MOVE})
+    //             //const hasW1pxAndH1px = target?.className.includes("w-1px") && target?.className.includes("h-1px");
+    //             // if (hasW1pxAndH1px) {
+    //             //
+    //             //     const left = target?.className.find(find => find.indexOf('translate-x') > -1)
+    //             //     const top = target?.className.find(find => find.indexOf('translate-y') > -1)
+    //             //
+    //             //     const leftValue = parseFloat(formatTailwindValue(left!))
+    //             //     const topValue = parseFloat(formatTailwindValue(top!))
+    //             //
+    //             //     onChange({className: ["w-100px", 'h-100px', `translate-x-[${leftValue - 50}px]`, `translate-y-[${topValue - 50}px]`], mutuallyExclusives: ['w-1px', 'h-1px', left!, top!]})
+    //             // }
+    //         }
+    //     },
+    //     {target: contentRef.current},
+    // );
 
 
     const onClick: MenuProps["onClick"] = (e) => {

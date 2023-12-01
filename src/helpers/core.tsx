@@ -6,15 +6,25 @@ import InputContainer from "@/components/InputContainer";
 import {Options, transform as babelTransform} from "sucrase";
 import {FileType} from "@/components/ContextMenu";
 import server from "@/server";
-import {clsx} from "clsx";
 
 const b = recast.types.builders;
 
 export type ElementType = Record<
     string,
     {
-        children: any[],
-        className: string[]; type: string; name?: string; style?: CSSProperties, text?: string
+        children: {
+            className: string[];
+            type: string;
+            name?: string;
+            style?: CSSProperties;
+            text?: string;
+        }[];
+        className: string[];
+        type: string;
+        name?: string;
+        style?: CSSProperties;
+        text?: string;
+        deleted: boolean;
     }
 >;
 
@@ -202,7 +212,7 @@ export const createElement = (file: FileType): DataType => {
                     const placeholder = findAttribute(attributes, 'placeholder', ast)
                     if (placeholder) text = placeholder;
                 }
-                elements[id] = {type, className, name, style: {}, text};
+                elements[id] = {type, className, name, style: {}, text, children: [], deleted: false};
             }
             this.traverse(path);
         },
@@ -226,11 +236,15 @@ export const createElement = (file: FileType): DataType => {
         } else {
             temp.className = [];
         }
+        //  init children
+        temp.children = []
         return temp;
     });
+
+    console.log("elements", elements)
+
     return {children, elements, ast, sourceCode: file.content, transformCode, filePath: file.path};
 }
-
 
 export function getIconColor(
     target: { className: string[] } | undefined,
@@ -296,7 +310,8 @@ export function traversalChildren(data: any, elements: any, props?: {
             if (Node.props) {
                 const arr = Node.props.className.split(" ");
                 id = arr[0];
-                classNameList = arr.slice(1);
+                classNameList = arr;
+
                 if (typeof Node.props.children === "string") {
                     children = Node.props.children;
 
@@ -329,6 +344,11 @@ export function traversalChildren(data: any, elements: any, props?: {
             }
 
             if (elements[id]) {
+
+                if (elements[id].deleted) { //  增加筛选
+                    return null
+                }
+
                 classNameList = [...elements[id].className];
             }
 
@@ -339,7 +359,6 @@ export function traversalChildren(data: any, elements: any, props?: {
                     classNameList.push(props.className);
                 }
             }
-
             if (!props?.isRoot) {
                 classNameList.push("rem-item");
             }
@@ -351,8 +370,9 @@ export function traversalChildren(data: any, elements: any, props?: {
             }
 
             //  动态创建的元素
-            if (elements[id].children.length > 0) {
+            if (elements[id] && elements[id].children?.length > 0) {
                 const addedDomList = elements[id].children
+                    .filter((item: any) => !item.deleted)
                     .map(createDom)
                     .map((item: any) => recursiveTraversal(item, elements))
                 if (Array.isArray(children)) {
@@ -513,78 +533,96 @@ export function traversalChildrenToTree(
 
 export function save(data: DataType, elements: ElementType) {
 
-    const keys = Object.keys(elements);
+    // const keys = Object.keys(elements);
 
     //  深拷贝
     const ast = recast.parse(recast.print(data.ast).code); // 对AST进行深拷贝
+
+    console.log("data.ast", data)
 
     recast.visit(ast, {
         visitJSXElement(path) {
             const {openingElement, children} = path.node
             const {attributes = []} = openingElement
-            const type = (openingElement.name as types.namedTypes.JSXIdentifier).name;
-            if (type !== "Fragment") {
-                const findIndex: any = attributes.findIndex((attr: any) => attr.name.name === 'className');
-                if (findIndex > -1) {
-                    const attr: any = attributes[findIndex]
-                    let id;
 
-                    if (attr.value.type === 'Literal' || attr.value.type === 'StringLiteral') {
-                        const className = attr.value.value;
-                        id = className.split(" ")[0]
-                        if (elements[id].className.length > 0) {
-                            attr.value.value = elements[id].className.join(" ")
-                        } else {
-                            attributes.splice(findIndex, 1)
-                        }
-                    } else if (attr.value.type === 'JSXExpressionContainer') {
+            const findIndex: any = attributes.findIndex((attr: any) => attr.name.name === 'className');
+            if (findIndex > -1) {
+                const attr: any = attributes[findIndex]
+                let id;
 
-                        if (attr.value.expression.type === 'Literal') {
-                            const className = attr.value.expression.value;
-                            id = className.split(" ")[0]
-                            attr.value.expression.value = elements[id].className.join(" ")
-
-                        } else if (attr.value.expression.type === "Identifier") {
-                            const findVariableName = attr.value.expression.name;
-                            recast.visit(ast, {
-                                visitVariableDeclarator(path): any {
-                                    const node = path.node as any;
-                                    let isUseState = false;
-                                    let variableName = "";
-                                    if (node.id.name) {
-                                        variableName = node.id.name;
-                                    } else if (node.init.callee && node.init.callee.name === "useState") {
-                                        variableName = node.id.elements[0].name;
-                                        isUseState = true;
-                                    }
-                                    if (variableName === findVariableName) {
-                                        if (isUseState) {
-                                            const className = node.init.arguments[0].value;
-                                            id = className.split(" ")[0]
-                                            node.init.arguments[0].value = elements[id].className.join(" ")
-                                        } else {
-                                            const className = node.init.value;
-                                            id = className.split(" ")[0]
-                                            node.init.value = elements[id].className.join(" ")
-                                        }
-                                        this.abort();
-                                        return false;
-                                    }
-                                    this.traverse(path);
-                                },
-                            });
-                        }
+                if (attr.value.type === 'Literal' || attr.value.type === 'StringLiteral') {
+                    const className = attr.value.value;
+                    id = className.split(" ")[0]
+                    if (elements[id].className.length > 0) {
+                        attr.value.value = elements[id].className.join(" ")
+                    } else {
+                        attributes.splice(findIndex, 1)
                     }
+                } else if (attr.value.type === 'JSXExpressionContainer') {
 
-                    if (children && children.length === 1 && children[0].type === 'JSXText') {
+                    if (attr.value.expression.type === 'Literal') {
+                        const className = attr.value.expression.value;
+                        id = className.split(" ")[0]
+                        attr.value.expression.value = elements[id].className.join(" ")
+
+                    } else if (attr.value.expression.type === "Identifier") {
+                        const findVariableName = attr.value.expression.name;
+                        recast.visit(ast, {
+                            visitVariableDeclarator(path): any {
+                                const node = path.node as any;
+                                let isUseState = false;
+                                let variableName = "";
+                                if (node.id.name) {
+                                    variableName = node.id.name;
+                                } else if (node.init.callee && node.init.callee.name === "useState") {
+                                    variableName = node.id.elements[0].name;
+                                    isUseState = true;
+                                }
+                                if (variableName === findVariableName) {
+                                    if (isUseState) {
+                                        const className = node.init.arguments[0].value;
+                                        id = className.split(" ")[0]
+                                        node.init.arguments[0].value = elements[id].className.join(" ")
+                                    } else {
+                                        const className = node.init.value;
+                                        id = className.split(" ")[0]
+                                        node.init.value = elements[id].className.join(" ")
+                                    }
+                                    this.abort();
+                                    return false;
+                                }
+                                this.traverse(path);
+                            },
+                        });
+                    }
+                }
+
+                let strChildren: any = "";
+
+                if (elements[id].children.length > 0) {
+                    elements[id].children.forEach(item => {
+                        // TODO 需要做一层转换, 展示不处理 style="${item.style}"
+                        strChildren += `<${item.type} className="${item.className.join(' ')}">${item.text || ''}</${item.type}>`
+                    })
+                }
+
+                if (children) {
+
+                    if (children.length === 1 && children[0].type === 'JSXText') {
                         const text = children[0].value;
                         if (elements[id].text !== text) {
                             children[0].value = elements[id].text as any;
                         }
                     }
 
+                    if (strChildren.length > 0) {
+                        console.log("str.length >0 children", children)
+                        children.push(strChildren)
+                    }
+
                 }
             }
+
             this.traverse(path);
         },
 
@@ -609,29 +647,37 @@ export type CanvasType = {
 }
 
 export function createCanvas(canvas: CanvasType) {
-    const uuid = new Date().getTime();
-    const root = <div className={clsx(uuid)}/>
-    return {
-        elements: {
-            [uuid]: {
-                className: [uuid, "w-500px", "h-500px", "bg-[#fff]"],
-                style: {},
-                type: 'div',
-                text: null,
-                children: [],
-            }
-        },
-        children: root
-    }
+    const content = `
+import React from 'react'
+export default function TempCanvas() { return <div className="w-${canvas.width}px h-${canvas.height}px bg-[${canvas.background}]">
+    <div className="w-100px h-100px translate-x-100px translate-y-100px bg-black"></div>
+</div> } 
+`
+    return createElement({path: '', content})
+
+    // const uuid = new Date().getTime();
+    // const root = <div className={clsx(uuid)}/>
+    // return {
+    //     elements: {
+    //         [uuid]: {
+    //             className: [uuid, "w-500px", "h-500px", "bg-[#fff]"],
+    //             style: {},
+    //             type: 'div',
+    //             text: null,
+    //             children: [],
+    //         }
+    //     },
+    //     children: root
+    // }
 }
 
 export function createRectView(parentId: string, data: any): [string, any] {
     const uuid = new Date().getTime().toString();
     const className = [uuid, "w-1px", "h-1px", "bg-[#cccccc]"]
     if (data.position) {
-        className.push(`absolute`)
-        className.push(`left-[${data.position.x}px]`)
-        className.push(`top-[${data.position.y}px]`)
+        className.push(`absolute left-0 top-0 transform-gpu`)
+        className.push(`translate-x-[${data.position.x}px]`)
+        className.push(`translate-y-[${data.position.y}px]`)
     }
     return [uuid, {
         parentId,
@@ -653,8 +699,8 @@ export function createDom({type, className}: { type: string, className: string[]
         return <span className={className.join(" ")}/>
     }
     return <div/>
-
 }
+
 
 type Node = {
     parentId?: string;
@@ -669,30 +715,53 @@ type Node = {
 type ObjectMap = Record<string, Node>;
 
 
-export function deleteElementById(obj: ObjectMap, targetParentId: string): void {
-    function findAndDelete(node: Node, parentId: string | undefined, index: number | undefined) {
-        if (node.parentId === targetParentId) {
-            // 找到目标节点，从父节点的 children 中删除
-            if (parentId !== undefined && index !== undefined && obj[parentId]?.children) {
-                obj[parentId].children?.splice(index, 1);
-                return true; // 表示找到并删除成功
-            }
-        }
+// export function deleteElementById(obj: ObjectMap, targetParentId: string): void {
+//     function findAndDelete(node: Node, parentId: string | undefined, index: number | undefined) {
+//         if (node.parentId === targetParentId) {
+//             // 找到目标节点，从父节点的 children 中删除
+//             if (parentId !== undefined && index !== undefined && obj[parentId]?.children) {
+//                 obj[parentId].children?.splice(index, 1);
+//                 return true; // 表示找到并删除成功
+//             }
+//         }
+//
+//         // 递归查找子节点
+//         if (node.children) {
+//             for (let i = 0; i < node.children.length; i++) {
+//                 if (findAndDelete(node.children[i], node.parentId, i)) {
+//                     // 如果找到并删除成功，停止继续查找
+//                     return true;
+//                 }
+//             }
+//         }
+//
+//         return false; // 表示未找到
+//     }
+//
+//     // 开始从根节点查找
+//     const rootId = Object.keys(obj)[0];
+//     findAndDelete(obj[rootId], undefined, undefined);
+// }
 
-        // 递归查找子节点
-        if (node.children) {
-            for (let i = 0; i < node.children.length; i++) {
-                if (findAndDelete(node.children[i], node.parentId, i)) {
-                    // 如果找到并删除成功，停止继续查找
-                    return true;
-                }
-            }
-        }
-
-        return false; // 表示未找到
-    }
-
-    // 开始从根节点查找
-    const rootId = Object.keys(obj)[0];
-    findAndDelete(obj[rootId], undefined, undefined);
-}
+//
+// export function getChangeData(obj: Record<string, any>) {
+//
+//     const className = []
+//     const mutuallyExclusives = []
+//
+//     Object.keys(obj).forEach(key => {
+//         className.push(`${key}-[${obj[key]}px]`)
+//     })
+// }
+//
+// export function updateElementPosition(obj: Record<string, any>) {
+//
+//     const className = []
+//     const mutuallyExclusives = []
+//
+//     Object.keys(obj).forEach(key => {
+//         className.push(`${key}-[${obj[key]}px]`)
+//         mutuallyExclusives.push(key)
+//     })
+//
+// }
