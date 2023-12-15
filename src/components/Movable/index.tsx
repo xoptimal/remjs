@@ -1,6 +1,6 @@
 import { MouseDown } from "@/components/Content";
 import NodeContext, { EventType } from "@/context";
-import { formatTailwindValue } from "@/hooks/useDebouncedValueHook";
+import { findKeyByClassName } from "@/helpers/core";
 import useKeyDown from "@/hooks/useKeyDown";
 import { deepFlat } from "@daybrush/utils";
 import { GroupManager, TargetList } from "@moveable/helper";
@@ -14,7 +14,6 @@ import ReactMovable, {
 } from "react-moveable";
 import Selector from "react-selecto";
 import { ExtensionElement } from "../AntDesignUI";
-import { findKeyByClassName } from "@/helpers/core";
 import { log } from "console";
 
 const DimensionViewable = {
@@ -57,6 +56,7 @@ type MovableProps = {
 };
 
 const snapContainer = ".rem-elements";
+const rootContainer = "#rem-content";
 const verticalGuidelines = [50, 150, 250, 450, 550];
 const horizontalGuidelines = [0, 100, 200, 400, 500];
 
@@ -79,52 +79,39 @@ export default function Movable(props: MovableProps) {
   //  用于记录当前点击的组件信息
   const componentRef = useRef<ExtensionElement | null>();
 
-  emitter.useSubscription(({ type, nodeIds, added, elements, data }) => {
+  emitter.useSubscription(({ type, nodeIds, added=false, elements, data }) => {
     if (type === EventType.SELECT_NODE) {
       if (added) {
         init();
       }
       const elements = selectorRef.current!.getSelectableElements();
-
-      console.log("EventType.SELECT_NODE", elements);
-
-      const filteredElements = elements.filter((item: any) => {
-        if (item.id) {
-          return nodeIds?.some((id) => item.id.includes(id));
-        }
-
-        const reactFiber = Object.keys(item).find(
-          (key) => key.indexOf("__reactFiber") > -1
-        );
-        if (reactFiber && item[reactFiber].key)
-          return (
-            reactFiber &&
-            nodeIds?.some((id) => item[reactFiber].key.includes(id))
-          );
+      const filteredElements = elements.filter((item) => {
+        const key = findKeyByClassName(item.className);
+        return nodeIds?.some((id) => key.includes(id));
       });
+      setSelectedTargets(filteredElements, { added });
 
-      setSelectedTargets(filteredElements);
     } else if (type === EventType.SYNC_ELEMENTS) {
-      const selectableElements = selectorRef.current!.getSelectableElements();
-      const tElement = { ...elements };
+      // const selectableElements = selectorRef.current!.getSelectableElements();
+      // const tElement = { ...elements };
 
-      selectableElements.forEach((dom: any) => {
-        if (dom.style.transform) {
-          const transform = dom.style.transform.match(/translate\((.*?)\)/);
-          if (transform) {
-            const [x, y] = transform[1].split(", ");
-            const key = findKeyByClassName(dom.className);
-            const className = tElement[key].className;
-            const filter = className.filter(
-              (find: string) =>
-                !find.includes("translate-x") && !find.includes("translate-y")
-            );
-            filter.push(`translate-x-[${x}]`, `translate-y-[${y}]`);
-            tElement[key].className = filter;
-          }
-        }
-      });
-      emitter.emit({ type: EventType.SAVE, elements: tElement });
+      // selectableElements.forEach((dom: any) => {
+      //   if (dom.style.transform) {
+      //     const transform = dom.style.transform.match(/translate\((.*?)\)/);
+      //     if (transform) {
+      //       const [x, y] = transform[1].split(", ");
+      //       const key = findKeyByClassName(dom.className);
+      //       const className = tElement[key].className;
+      //       const filter = className.filter(
+      //         (find: string) =>
+      //           !find.includes("translate-x") && !find.includes("translate-y")
+      //       );
+      //       filter.push(`translate-x-[${x}]`, `translate-y-[${y}]`);
+      //       tElement[key].className = filter;
+      //     }
+      //   }
+      // });
+      emitter.emit({ type: EventType.SAVE, elements });
     } else if (type === EventType.GRAB) {
       componentRef.current = data;
     }
@@ -142,6 +129,16 @@ export default function Movable(props: MovableProps) {
     e.target.style.transform = e.drag.transform;
   }
 
+  const onResizeEnd = (resizeTarget: any) => {
+    if (contentStyle.cursor === "crosshair") return;
+    const style = {
+      width: resizeTarget.style.width,
+      height: resizeTarget.style.height,
+    };
+    onChange({ style });
+    movableRef.current!.waitToChangeTarget();
+  };
+
   useEventListener(
     "mousemove",
     (event) => {
@@ -149,6 +146,10 @@ export default function Movable(props: MovableProps) {
         if (contentStyle.cursor === "crosshair" && target) {
           const deltaX = event.clientX - mousedown.offsetX;
           const deltaY = event.clientY - mousedown.offsetY;
+
+          console.log('11111111111111111');
+          
+
           movableRef.current!.request(
             "resizable",
             { offsetWidth: deltaX, offsetHeight: deltaY },
@@ -157,7 +158,7 @@ export default function Movable(props: MovableProps) {
         }
       }
     },
-    { target: document.querySelector("#container") }
+    { target: document.querySelector(rootContainer) }
   );
 
   useEventListener(
@@ -167,54 +168,39 @@ export default function Movable(props: MovableProps) {
         emitter.emit({ type: EventType.ACTION_MOVE });
 
         const style = movableRef.current!.getDragElement()!.style;
-        let translateX, translateY, width, height;
         const mutuallyExclusives = target!.className.filter(
           (find) => find.indexOf("w-") > -1 || find.indexOf("h-") > -1
         );
 
         if (style.height.length === 0 && style.width.length === 0) {
-          //  mouse not move
+          const className = [`w-[100px]`, `h-[100px]`];
+          onChange({ className, mutuallyExclusives: ["w-1px", "h-1px"] });
 
-          const firstTranslateX = target?.className.find(
-            (find) => find.indexOf("translate-x") > -1
-          )!;
-          const firstTranslateY = target?.className.find(
-            (find) => find.indexOf("translate-y") > -1
-          )!;
+          if(target.position) {
+            movableRef.current!.request("draggable", {
+              isInstant: true,
+              x: target.position.x - 50,
+              y: target.position.y - 50,
+            });
+          }
 
-          translateX = parseFloat(formatTailwindValue(firstTranslateX)) - 50;
-          translateY = parseFloat(formatTailwindValue(firstTranslateY)) - 50;
-
-          width = 100;
-          height = 100;
-
-          mutuallyExclusives.push(firstTranslateX, firstTranslateY);
-
-          const className = [
-            `w-[${width}px]`,
-            `h-[${height}px]`,
-            `translate-x-[${translateX}px]`,
-            `translate-y-[${translateY}px]`,
-          ];
-
-          onChange({ className, mutuallyExclusives });
         } else {
           // mouse move
-          width = style.width;
-          height = style.height;
-          const className = [`w-[${width}]`, `h-[${height}]`];
+          const className = [`w-[${style.width}]`, `h-[${style.height}]`];
           onChange({ className, mutuallyExclusives });
         }
       } else {
-        if (        // @ts-ignore
-          contentStyle.cursor.indexOf("mouse_active") > -1 &&
+        if (
+          // @ts-ignore
+          contentStyle.cursor?.indexOf("mouse_active") > -1 &&
           componentRef.current
         ) {
-          const container = document.querySelector("#container");
+          const container = document.querySelector(rootContainer);
           const offsetX =
             event.clientX - container!.getBoundingClientRect().left;
           const offsetY =
             event.clientY - container!.getBoundingClientRect().top;
+
           const position = { x: offsetX, y: offsetY };
           emitter.emit({
             type: EventType.ADD_EXTENSION_ELEMENT,
@@ -224,7 +210,7 @@ export default function Movable(props: MovableProps) {
         }
       }
     },
-    { target: document.querySelector("#container") }
+    { target: document.querySelector(rootContainer) }
   );
 
   const selectorRef = React.useRef<Selector>(null);
@@ -269,70 +255,41 @@ export default function Movable(props: MovableProps) {
     init();
   }, []);
 
-  const setSelectedTargets = React.useCallback((nextTargets: any) => {
-    console.log("nextTargets", nextTargets);
+  const setSelectedTargets = React.useCallback(
+    (nextTargets: any, option?: { added: boolean }) => {
+      if (!nextTargets || nextTargets.length === 0) {
+        selectorRef.current!.setSelectedTargets([]);
+        setTargets(nextTargets);
+        setTarget();
+        emitter.emit({ type: EventType.SELECT_TREE, nodeIds: [] });
+        return;
+      }
 
-    if (!nextTargets || nextTargets.length === 0) {
-      selectorRef.current!.setSelectedTargets([]);
+      elementHasMouseEnter.current = true;
+      selectorRef.current!.setSelectedTargets(deepFlat(nextTargets));
       setTargets(nextTargets);
-      setTarget();
-      emitter.emit({ type: EventType.SELECT_TREE, nodeIds: [] });
-      return;
-    }
+      setTarget(findKeyByClassName(nextTargets[0].className));
 
-    elementHasMouseEnter.current = true;
-
-    selectorRef.current!.setSelectedTargets(deepFlat(nextTargets));
-    setTargets(nextTargets);
-
-    setTarget(findKeyByClassName(nextTargets[0].className));
-
-    //const arr = new Set<string>();
-    //const treeNodeIds = new Set<string>();
-
-    // // const processChild = (child: any) => {
-    // //   const reactFiber = Object.keys(child).find(
-    // //     (key) => key.indexOf("__reactFiber") > -1
-    // //   );
-    // //   if (reactFiber && child[reactFiber].key) {
-    // //     const key = child[reactFiber].key;
-    // //     arr.add(key.substring(0, 13));
-    // //     treeNodeIds.add(
-    // //       key.indexOf("rem_group") > -1
-    // //         ? key.substring(0, key.lastIndexOf("-"))
-    // //         : key
-    // //     );
-    // //   }
-    // // };
-
-    // nextTargets.forEach((item: any) => {
-    //   if (Array.isArray(item)) {
-    //     item.forEach(processChild);
-    //   } else {
-    //     processChild(item);
-    //   }
-    // });
-
-    //setTarget([...arr][0]);
-    // emitter.emit({ type: EventType.SELECT_TREE, nodeIds: [...treeNodeIds] });
-  }, []);
-
-  const onResizeEnd = (resizeTarget: any) => {
-    if (contentStyle.cursor === "crosshair") return;
-    const style = {
-      width: resizeTarget.style.width,
-      height: resizeTarget.style.height,
-    };
-    onChange({ style });
-  };
+      if (option?.added) {
+        movableRef.current!.waitToChangeTarget().then(() => {
+          movableRef.current!.request("draggable", {
+            isInstant: true,
+            deltaX: 0,
+            deltaY: 0,
+          });
+        });
+      }
+    },
+    []
+  );
 
   const elementHasMouseEnter = useRef(false);
 
   const MouseEnterLeaveAble = makeAble("enterLeave", {
-    mouseEnter() {
+    mouseEnter(moveable: MoveableManagerInterface) {
       elementHasMouseEnter.current = true;
     },
-    mouseLeave() {
+    mouseLeave(moveable: MoveableManagerInterface) {
       elementHasMouseEnter.current = false;
     },
   });
@@ -360,7 +317,6 @@ export default function Movable(props: MovableProps) {
           dimensionViewable: true,
           enterLeave: true,
         }}
-        preventClickDefault={false} //  传递下一层
         onClickGroup={(e) => {
           if (!e.moveableTarget) {
             setSelectedTargets([]);
@@ -378,18 +334,8 @@ export default function Movable(props: MovableProps) {
             selectorRef.current!.clickTarget(e.inputEvent, e.moveableTarget);
           }
         }}
+        preventClickDefault={true}
         draggable // 是否可以拖拽
-        // onDragStart={e => {
-        //   console.log('Selector onDragStart');
-        //   if(!e.target.style.transform) {
-        //     const className = e.target.className.split(" ") as string[]
-        //     const translateX = className.find(find => find.indexOf('translate-x') > -1)
-        //     const translateY = className.find(find => find.indexOf('translate-y') > -1)
-        //     if(translateX && translateY) {
-        //       e.target.style.transform = `translate(${formatTailwindValue(translateX)}, ${formatTailwindValue(translateY)})`;
-        //     }
-        //   }
-        // }}
         onDrag={(e) => {
           //  操作单个target拖拽回调
           //  当前Target是组, 则不允许移动,
@@ -402,6 +348,15 @@ export default function Movable(props: MovableProps) {
             e.target.style.transform = `translate(${e.translate[0]}px, ${e.translate[1]}px)`;
           }
         }}
+        onDragEnd={(e) => {
+          if (e.isDrag) {
+            const translate = e.lastEvent.translate;
+            const style = {
+              transform: `translate(${translate[0]}px, ${translate[1]}px)`,
+            };
+            onChange({ style });
+          }
+        }}
         onResizeGroupEnd={({ events }) => {
           onResizeEnd(events[0].target);
         }}
@@ -409,10 +364,6 @@ export default function Movable(props: MovableProps) {
         displayAroundControls={true}
         edge //resize,scale是否支持通过边框操作
         controlPadding={0}
-        // onResizeStart={e => {
-        //   e.setOrigin(["%", "%"]);
-        //   e.dragStart.set(frame.translate);
-        // }}
         onResize={handleResize} // 缩放中
         onResizeEnd={({ target: resizeTarget }) => {
           onResizeEnd(resizeTarget);
@@ -441,6 +392,7 @@ export default function Movable(props: MovableProps) {
         snapDigit={0} //捕捉距离数字
       />
       <Selector
+        preventClickDefault={true}
         ref={selectorRef}
         // @ts-ignore
         rootContainer={snapContainer}
@@ -450,9 +402,11 @@ export default function Movable(props: MovableProps) {
         toggleContinueSelect={["shift"]}
         hitRate={0}
         ratio={0}
+        // stopPropagation={true}
+        // checkInput={false}
+        // dragFocusedInput={false}
+        // preventDragFromInside={false}
         onDragStart={(e) => {
-          console.log("Selector onDragStart");
-
           if (
             (isKeyDown && key === "space") ||
             contentStyle.cursor === "crosshair"
@@ -476,8 +430,6 @@ export default function Movable(props: MovableProps) {
           }
         }}
         onSelectEnd={(e) => {
-          console.log("Selector onSelectEnd");
-
           const { isDragStart, isClick, added, removed, inputEvent } = e;
           if (typeof movableRef !== "function" && movableRef !== null) {
             const moveable = movableRef.current!;
@@ -513,6 +465,7 @@ export default function Movable(props: MovableProps) {
                 removed
               );
             }
+
             e.currentTarget.setSelectedTargets(nextChilds.flatten());
             setSelectedTargets(nextChilds.targets());
           }

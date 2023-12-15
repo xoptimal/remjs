@@ -65,7 +65,6 @@
     "@unocss/transformer-attributify-jsx-babel": "^0.53.4",
     "@vitejs/plugin-react": "^3.1.0",
     "ahooks": "^3.7.6",
-    "antd": "^5.5.0",
     "autoprefixer": "^10.4.14",
     "clsx": "^1.2.1",
     "lucide-react": "^0.274.0",
@@ -87,6 +86,7 @@
   "dependencies": {
     "@react-spring/web": "^9.7.3",
     "@use-gesture/react": "^10.2.27",
+    "antd": "^5.12.2",
     "react-use-gesture": "^9.1.3"
   }
 }

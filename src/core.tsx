@@ -7,7 +7,6 @@ import {
   createCanvas,
   createElement,
   createExtensionElement,
-  createRectView,
   save,
   traversalChildren,
 } from "@/helpers/core";
@@ -82,12 +81,16 @@ const Core: React.FC<CoreProps> = (props) => {
       case EventType.ADD_REACT:
         {
           const firstPropertyId = Object.keys(elementsRef.current)[0];
-          const [id, element] = createRectView(firstPropertyId, data);
-
+          const element = createExtensionElement(firstPropertyId, {
+            position: data.position,
+            source: "div",
+            className: ["w-1px", "h-1px", "bg-[#cccccc]"],
+          });
+          
           setElements((prev) => {
             const temp = { ...prev };
             temp[firstPropertyId].children.push(element);
-            temp[id] = element;
+            temp[element.id] = element;
 
             //  sync
             elementsRef.current = temp;
@@ -99,7 +102,7 @@ const Core: React.FC<CoreProps> = (props) => {
             // 选择当前目标
             emitter.emit({
               type: EventType.SELECT_NODE,
-              nodeIds: [id],
+              nodeIds: [element.id],
               added: true,
             });
           }, 10);
@@ -108,12 +111,12 @@ const Core: React.FC<CoreProps> = (props) => {
       case EventType.ADD_EXTENSION_ELEMENT:
         {
           const firstPropertyId = Object.keys(elementsRef.current)[0];
-          const [id, element] = createExtensionElement(firstPropertyId, data);
+          const element = createExtensionElement(firstPropertyId, data);
 
           setElements((prev) => {
             const temp = { ...prev };
             temp[firstPropertyId].children.push(element);
-            temp[id] = element;
+            temp[element.id] = element;
 
             //  sync
             elementsRef.current = temp;
@@ -125,7 +128,7 @@ const Core: React.FC<CoreProps> = (props) => {
             // 选择当前目标
             emitter.emit({
               type: EventType.SELECT_NODE,
-              nodeIds: [id],
+              nodeIds: [element.id],
               added: true,
             });
           }, 10);
@@ -186,9 +189,6 @@ const Core: React.FC<CoreProps> = (props) => {
   useKeyPress(
     "delete",
     () => {
-
-      console.log('delete target', target);
-
       if (target) {
         //  保存当前对象副本
         setHistoryList((prev) => [...prev, { ...target }]);
@@ -223,7 +223,13 @@ const Core: React.FC<CoreProps> = (props) => {
     targetId,
     callback
   ) => {
-    const { className, mutuallyExclusives = [], text, placeholder, style } = params;
+    const {
+      className,
+      mutuallyExclusives = [],
+      text,
+      placeholder,
+      style,
+    } = params;
 
     const tTarget = targetId ? elements[targetId] : getTarget();
     if (!tTarget) return;
@@ -231,24 +237,27 @@ const Core: React.FC<CoreProps> = (props) => {
     setElements((draft: any) => {
       if (text) tTarget.text = text;
       if (placeholder) tTarget.placeholder = placeholder;
-      if (style) tTarget.style = {...tTarget.style, ...style};
-      if (className || mutuallyExclusives.length > 0) {
-        let arr = [...draft[tTarget.id].className];
-        if (mutuallyExclusives) {
-          arr = arr.filter(
-            (className) => !mutuallyExclusives.includes(className)
-          );
-        }
-        if (className) {
-          if (Array.isArray(className)) {
-            arr.push(...className);
-          } else {
-            arr.push(className);
-          }
-          arr = Array.from(new Set(arr));
-        }
-        tTarget.className = arr;
+      if (style) tTarget.style = { ...tTarget.style, ...style };
+
+      let arr = [...draft[tTarget.id].className];
+
+      if (mutuallyExclusives.length > 0) {
+        arr = arr.filter(
+          (className) => !mutuallyExclusives.includes(className)
+        );
       }
+
+      if (className) {
+        if (Array.isArray(className)) {
+          arr.push(...className);
+        } else {
+          arr.push(className);
+        }
+        arr = Array.from(new Set(arr));
+      }
+
+      tTarget.className = arr;
+
       const temp = { ...tTarget };
       setTarget(temp);
       draft[tTarget.id] = temp;
@@ -262,10 +271,18 @@ const Core: React.FC<CoreProps> = (props) => {
   };
 
   const handleSetTarget = (id?: string) => {
-    if(elementsRef.current) {
+    if (elementsRef.current) {
       setTarget(
-        id && elementsRef.current[id] ? { ...elementsRef.current[id], id } : null
+        id && elementsRef.current[id]
+          ? { ...elementsRef.current[id], id }
+          : null
       );
+      setElements((draft: any) => {
+        Object.keys(draft).map((key) => {
+          draft[key].selected = key === id;
+        });
+        return draft;
+      });
     }
   };
 
@@ -280,8 +297,6 @@ const Core: React.FC<CoreProps> = (props) => {
       elements && traversalChildren(data.children, elements, { isRoot: true })
     );
   }, [elements]);
-
-  console.log("elements", elements);
 
   return (
     <NodeContext.Provider

@@ -44,6 +44,8 @@ function InputContainer(props: React.PropsWithChildren<InputContainerProps>) {
         className,
         style,
         onClick: () => {
+            console.log('11233333');
+            
         }
     }
 

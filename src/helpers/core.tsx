@@ -80,7 +80,7 @@ function checkFormElement(element: any) {
   if (typeof element === "string") {
     lowercaseElement = element.toLowerCase();
   } else if (element.displayName) {
-    lowercaseElement = element.displayName;
+    lowercaseElement = element.displayName.toLowerCase();
   }
 
   return FORM_ELEMENTS.some(
@@ -280,7 +280,11 @@ export function traversalChildren(
   function recursiveTraversal(
     data: any,
     elements: any,
-    props?: { className?: string | string[]; index?: number; isRoot?: boolean }
+    props?: {
+      className?: string | string[];
+      index?: number;
+      isRoot?: boolean;
+    }
   ): any {
     const Node: ReactElement = data;
     let render;
@@ -357,6 +361,11 @@ export function traversalChildren(
         }
 
         classNameList = [id, ...elements[id].className];
+
+        if (elements[id].selected) {
+          classNameList.push("rem-selected");
+        }
+
         style = elements[id].style;
       }
 
@@ -548,38 +557,6 @@ export function traversalChildrenToTree(
   }
 }
 
-function combineImportStatements(importStrings: string[]): string {
-  const importMap: { [libraryName: string]: Set<string> } = {};
-
-  importStrings.forEach((importString) => {
-    const match = importString.match(
-      /import\s+\{\s*([^}]+)\s*\}\s+from\s+"([^"]+)"\s*;/
-    );
-
-    if (match && match[1] && match[2]) {
-      const libraryName = match[2];
-      const componentNames = match[1].split(/\s*,\s*/);
-
-      if (!importMap[libraryName]) {
-        importMap[libraryName] = new Set();
-      }
-
-      componentNames.forEach((componentName) =>
-        importMap[libraryName].add(componentName)
-      );
-    }
-  });
-
-  const combinedStrings = Object.entries(importMap).map(
-    ([libraryName, componentSet]) => {
-      const components = Array.from(componentSet).join(", ");
-      return `import { ${components} } from "${libraryName}";`;
-    }
-  );
-
-  return combinedStrings.join("\n");
-}
-
 export function save(data: DataType, elements: ElementType) {
   // const keys = Object.keys(elements);
 
@@ -607,7 +584,7 @@ export function save(data: DataType, elements: ElementType) {
           const className = attr.value.value;
           id = className.split(" ")[0];
           if (elements[id].className.length > 0) {
-            attr.value.value = writeClass(elements[id]);
+            attr.value.value = styleToClass(elements[id]);
           } else {
             attributes.splice(findIndex, 1);
           }
@@ -615,7 +592,7 @@ export function save(data: DataType, elements: ElementType) {
           if (attr.value.expression.type === "Literal") {
             const className = attr.value.expression.value;
             id = className.split(" ")[0];
-            attr.value.expression.value = writeClass(elements[id]);
+            attr.value.expression.value = styleToClass(elements[id]);
           } else if (attr.value.expression.type === "Identifier") {
             const findVariableName = attr.value.expression.name;
             recast.visit(ast, {
@@ -636,11 +613,11 @@ export function save(data: DataType, elements: ElementType) {
                   if (isUseState) {
                     const className = node.init.arguments[0].value;
                     id = className.split(" ")[0];
-                    node.init.arguments[0].value = writeClass(elements[id]);
+                    node.init.arguments[0].value = styleToClass(elements[id]);
                   } else {
                     const className = node.init.value;
                     id = className.split(" ")[0];
-                    node.init.value = writeClass(elements[id]);
+                    node.init.value = styleToClass(elements[id]);
                   }
                   this.abort();
                   return false;
@@ -659,11 +636,12 @@ export function save(data: DataType, elements: ElementType) {
 
         if (elements[id].children.length > 0) {
           elements[id].children.forEach((item) => {
-            // TODO 需要做一层转换, 展示不处理 style="${item.style}"
-            strChildren += `<${item.key} className="${item.className?.join(
-              " "
+            strChildren += `<${item.key} className="${styleToClass(
+              elements[item.id]
             )}">${item.text || ""}</${item.key}>`;
-            importStrings += item.import + "\n";
+
+            if (importStrings.indexOf(item.import) === -1)
+              importStrings += item.import + "\n";
           });
         }
 
@@ -685,9 +663,12 @@ export function save(data: DataType, elements: ElementType) {
     },
   });
 
-  console.log("origin", recast.print(data.ast).code);
-  const code = importStrings + recast.print(ast).code;
-  console.log(code);
+  console.log(
+    "=================origin=================\n",
+    recast.print(data.ast).code
+  );
+  const code = mergeImports(recast.print(ast).code, importStrings);
+  console.log("=================print=================\n", code);
 
   return new Promise<FileResponseType>((resolve, reject) => {
     server.writeFile(code, data.filePath, (response) => {
@@ -709,14 +690,21 @@ export type CanvasType = {
 export function createCanvas(canvas: CanvasType) {
   const content = `
   import { Button } from "antd"
+
+  import { Button } from "antd"
+
+  import { Button } from "antd"
   import { Input } from "antd"
   
-  import React from 'react'
-  export default function TempCanvas() { return (
-      <div className="w-500px h-500px bg-[#fff]">
-          <div className="w-100px h-100px bg-black translate-x-[100px] translate-y-[100px]"></div>
-          <Button className="absolute left-0 top-0 w-[178px] h-[93px] translate-x-[213px] translate-y-[170px]">按钮</Button><Input className="absolute left-0 top-0 w-[177px] h-[73px] translate-x-[0px] translate-y-[15px]"></Input></div>
-  ); } 
+    import React from 'react'
+    export default function TempCanvas() { return (
+      <div className="w-[500px] h-[500px] bg-[#fff]">
+
+
+
+        <Button className="absolute left-0 top-0 translate-x-[47px] translate-y-[78px]">按钮</Button><Button className="absolute left-0 top-0 translate-x-[47px] translate-y-[417px]">按钮</Button></div>
+    ); } 
+  
   
   
   `;
@@ -738,55 +726,56 @@ export function createCanvas(canvas: CanvasType) {
   // }
 }
 
-export function createRectView(parentId: string, data: any): [string, any] {
-  const uuid = `remKey-${new Date().getTime()}`;
-  const className = [uuid, "w-1px", "h-1px", "bg-[#cccccc]"];
-  if (data.position) {
-    // className.push(`absolute`, "left-0", "top-0");
-    className.push(`translate-x-[${data.position.x}px]`);
-    className.push(`translate-y-[${data.position.y}px]`);
-  }
-  return [
-    uuid,
-    {
-      parentId,
-      className,
-      style: {},
-      source: "div",
-      text: null,
-      children: [],
-    },
-  ];
-}
+// export function createRectView(parentId: string, data: any): ExtensionElement {
+//   const uuid = `remKey-${new Date().getTime()}`;
+//   const className = [uuid, ];
+//   return {
+//       id: uuid,
+//       parentId,
+//       className,
+//       style: {
+//         transform: `translate(${data.position.x}px, ${data.position.y}px)`,
+//       },
+//       props: {
+//         className: uuid + " " + className.join(" "),
+//         style: {
+//           transform: `translate(${data.position.x}px, ${data.position.y}px)`,
+//         },
+//       },
+//       source: "div",
+//       children: [],
+//   };
+// }
 
-export function createExtensionElement(
-  parentId: string,
-  data: any
-): [string, any] {
+export function createExtensionElement(parentId: string, data: any) {
   const uuid = `remKey-${new Date().getTime()}`;
   const className = [];
   if (data.position) {
-    className.push(
-      `absolute`,
-      "left-0",
-      "top-0",
-      `translate-x-[${data.position.x}px]`,
-      `translate-y-[${data.position.y}px]`
-    );
+    className.push(`absolute`, "left-0", "top-0");
   }
 
-  return [
-    uuid,
-    {
-      parentId,
-      className,
-      style: {},
-      props: {
-        className: uuid + " " + className.join(" "),
-      },
-      ...data,
+  if (data.className) {
+    className.push(...data.className);
+  }
+
+  return {
+    id: uuid,
+    parentId,
+    selected: true,
+    position: data.position,
+    text: data.text,
+    className,
+    source: data.source,
+    style: {
+      transform: `translate(${data.position.x}px, ${data.position.y}px)`,
     },
-  ];
+    props: {
+      className: uuid + " " + className.join(" "),
+      style: {
+        transform: `translate(${data.position.x}px, ${data.position.y}px)`,
+      },
+    },
+  };
 }
 
 export function findKeyByClassName(className: string | string[]): string {
@@ -798,40 +787,45 @@ export function findKeyByClassName(className: string | string[]): string {
 }
 
 function initStyle(className: string) {
-  const arr = className.split(" ");
-  const width = arr.find((find) => find.indexOf("w-") > -1);
-  const height = arr.find((find) => find.indexOf("h-") > -1);
-
-  const translateX = arr.find((find) => find.indexOf("translate-x-") > -1);
-  const translateY = arr.find((find) => find.indexOf("translate-y-") > -1);
-
   const style: CSSProperties = {};
-  if (width) {
-    style.width = formatTailwindValue(width);
-  }
-  if (height) {
-    style.height = formatTailwindValue(height);
-  }
 
-  if (translateX && translateY) {
-    style.transform = `translate(${formatTailwindValue(
-      translateX
-    )}, ${formatTailwindValue(translateY)})`;
+  if (className) {
+    const arr = className.split(" ");
+    const width = arr.find((find) => find.indexOf("w-") > -1);
+    const height = arr.find((find) => find.indexOf("h-") > -1);
+
+    const translateX = arr.find((find) => find.indexOf("translate-x-") > -1);
+    const translateY = arr.find((find) => find.indexOf("translate-y-") > -1);
+
+    if (width) {
+      style.width = formatTailwindValue(width);
+    }
+    if (height) {
+      style.height = formatTailwindValue(height);
+    }
+
+    if (translateX && translateY) {
+      style.transform = `translate(${formatTailwindValue(
+        translateX
+      )}, ${formatTailwindValue(translateY)})`;
+    }
   }
 
   return style;
 }
 
-function writeClass(target: any) {
+/**
+ * 将Style对象转换为className
+ * @param target
+ * @returns string
+ */
+function styleToClass(target: any) {
   const filterKey = [
     { key: "width", value: "w" },
     { key: "height", value: "h" },
   ];
-
   const { className, style = {} } = target;
-
   let arr = [...className];
-
   filterKey.forEach((item) => {
     if (style[item.key]) {
       const findIndex = arr.findIndex(
@@ -844,19 +838,15 @@ function writeClass(target: any) {
       }
     }
   });
-
   if (style.transform) {
-    console.log("style.transform", style.transform);
     const transform = style.transform.match(/translate\((.*?)\)/);
-
     const [x, y] = transform[1].split(", ");
     arr = arr.filter(
-      (find:string) =>
+      (find: string) =>
         !find.includes("translate-x") && !find.includes("translate-y")
     );
     arr.push(`translate-x-[${x}]`, `translate-y-[${y}]`);
   }
-
   return arr.join(" ");
 }
 
@@ -938,3 +928,97 @@ type ObjectMap = Record<string, Node>;
 //     })
 //
 // }
+type ImportInfo = {
+  defaultImport: string | null;
+  namedImports: string[];
+  from: string;
+};
+
+function findImports(code: string): {
+  importStatements: ImportInfo[];
+  remainingCode: string;
+} {
+  const importStatementsRegex =
+    /import\s*(?:([\w\s,{}]+)\s*from\s*)?["']([^"']+)["']/g;
+
+  let match;
+
+  let remainingCode = code;
+  const importStatements: ImportInfo[] = [];
+
+  while ((match = importStatementsRegex.exec(code)) !== null) {
+    const [fullMatch, importClause, moduleName] = match;
+    let defaultImport: string | null = null;
+    let namedImports: string[] = [];
+
+    if (importClause) {
+      const namedImportsRegex = /\{([^}]+)\}/;
+      const namedImportsMatch = importClause.match(namedImportsRegex);
+
+      if (namedImportsMatch) {
+        namedImports = namedImportsMatch[1]
+          .split(",")
+          .map((item) => item.trim());
+      }
+
+      const defaultImportRegex = /^([\w\s]+)(?=\s*,|$)/;
+      const defaultImportMatch = importClause.match(defaultImportRegex);
+
+      if (defaultImportMatch) {
+        defaultImport = defaultImportMatch[1].trim();
+      }
+
+      remainingCode = remainingCode.replace(fullMatch, "");
+    }
+
+    importStatements.push({
+      defaultImport,
+      namedImports,
+      from: moduleName,
+    });
+  }
+
+  return { importStatements, remainingCode };
+}
+
+function mergeImports(code: string, importInfo: string): string {
+  // 提取第一个字符串中的所有 import 语句
+  const { importStatements, remainingCode } = findImports(code);
+
+  // 提取第二个字符串中的所有 import 语句
+  const { importStatements: importStatements2 } = findImports(importInfo);
+
+  // 合并并去重
+  const importMap = new Map<string, ImportInfo>();
+  [...importStatements, ...importStatements2].forEach((importInfo) => {
+    const existing = importMap.get(importInfo.from);
+
+    if (existing) {
+      if (importInfo.defaultImport) {
+        existing.defaultImport = importInfo.defaultImport;
+      }
+
+      if (importInfo.namedImports.length > 0) {
+        existing.namedImports = [
+          ...new Set([...existing.namedImports, ...importInfo.namedImports]),
+        ];
+      }
+    } else {
+      importMap.set(importInfo.from, { ...importInfo });
+    }
+  });
+
+  // 生成合并后的 import 语句
+  const result = [...importMap.values()]
+    .map(({ defaultImport, namedImports, from }) => {
+      const defaultPart = defaultImport ? `${defaultImport}` : "";
+      const namedPart =
+        namedImports.length > 0 ? `{ ${namedImports.join(", ")} }` : "";
+      return `import ${defaultPart}${
+        defaultPart && namedPart ? ", " : ""
+      }${namedPart} from "${from}"`;
+    })
+    .join("\n\n");
+
+  return result + "\n\n" + remainingCode.trim();
+}

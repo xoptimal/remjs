@@ -10,9 +10,13 @@ export type ExtensionElement = {
   placeholder?: string;
   className?: string[];
   import: string
+  id: string
+  parentId?: string
+  style: React.CSSProperties
+  children: any[]
 };
 
-const list: ExtensionElement[] = [
+const list: any[] = [
   {
     key: "Button",
     source: Button,
@@ -37,7 +41,6 @@ export default function () {
       {list.map((item) => {
         return (
           <Col span={12} key={item.key}>
-            <Button>123</Button>
             <div
               onMouseDown={(e) => {
                 emitter.emit({ type: EventType.GRAB, data: item });

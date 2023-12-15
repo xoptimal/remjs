@@ -16,14 +16,14 @@ export enum EventType {
   DELETE,
   GRAB,
 } export type EventProps<T = any> = { type: EventType;
-  nodeIds?: React.Key[];
+  nodeIds?: string[];
   data?: T;
   added?: boolean;
   elements?: any;
 };
 
 export type NodeContextType = {
-  target?: { className: string[]; id: string; parentId?: string, style: React.CSSProperties };
+  target?: { className: string[]; id: string; parentId?: string, style: React.CSSProperties, position?: { x: number, y: number } };
   setTarget: (id?: string) => void;
   onChange: (
     params: {

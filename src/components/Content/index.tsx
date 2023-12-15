@@ -55,7 +55,7 @@ const defaultContentStyle: React.CSSProperties = {
   opacity: 0,
   background: "white",
   width: "fit-content",
-  cursor: "default",
+  //cursor: "default",
   position: "relative",
 };
 
@@ -198,13 +198,18 @@ export default function Content(props: React.PropsWithChildren) {
     "mousedown",
     (e) => {
       if (contentStyle.cursor === "crosshair") {
+
         setMousedown({ down: true, offsetX: e.clientX, offsetY: e.clientY });
+
         const offsetX =
           e.clientX - contentRef.current!.getBoundingClientRect().left;
         const offsetY =
           e.clientY - contentRef.current!.getBoundingClientRect().top;
+
         const position = { x: offsetX, y: offsetY };
+
         emitter.emit({ type: EventType.ADD_REACT, data: { position } });
+        
         e.preventDefault();
       }
     },
@@ -299,7 +304,7 @@ export default function Content(props: React.PropsWithChildren) {
           }}
         >
           <div
-            id={"container"}
+            id={"rem-content"}
             ref={contentRef}
             className={`rem-elements selecto-area`}
             style={contentStyle}
