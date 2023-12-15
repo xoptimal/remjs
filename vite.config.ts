@@ -29,6 +29,7 @@ export default defineConfig((mode: ConfigEnv): UserConfig => {
         resolve: {
             alias: {
                 "@": path.resolve(__dirname, "./src"),
+                '@assets': path.resolve(__dirname, 'src/assets'),
             },
         },
         // @ts-ignore

@@ -13,15 +13,18 @@ import {
 import { Button, Col, Row } from "antd";
 import InputItem from "@/components/InputItem";
 import { IconItem } from "@/components/Panel/Typography";
+import InputItemToDom from "../InputItem/InputItemToElement";
 
 const textStyles: any[] = [
   {
     placeholder: "WIDTH",
     tailwindPrefix: "w",
+    styleKey: 'width'
   },
   {
     placeholder: "HEIGHT",
     tailwindPrefix: "h",
+    styleKey: 'height'
   },
   {
     placeholder: "MAX WIDTH",
@@ -83,6 +86,18 @@ export default function LayoutPanel() {
         </Button.Group>
       </Col>
       {textStyles.map((item, index) => {
+
+        if(item.tailwindPrefix === "h" || item.tailwindPrefix === "w") {
+          return (
+            <Col span={12} key={item.tailwindPrefix}>
+              <InputItemToDom
+                styleKey={item.styleKey}
+                placeholder={item.placeholder}
+              />
+            </Col>
+          );
+        }
+
         return (
           <Col span={12} key={item.tailwindPrefix}>
             <InputItem

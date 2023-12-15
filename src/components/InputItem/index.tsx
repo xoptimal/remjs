@@ -3,10 +3,10 @@ import { TextField } from "@mui/material";
 import useDebouncedValueHook from "@/hooks/useDebouncedValueHook";
 import RemDropdown from "@/components/DropDown";
 
-type InputItemProps = {
+export type InputItemProps = {
   items?: Record<string, string>;
   placeholder?: string;
-  tailwindPrefix: string;
+  tailwindPrefix?: string;
   value?: string;
   itemsTransform?: (key: string, label: string) => any;
   matchValue?: (key: string, label: string) => any;

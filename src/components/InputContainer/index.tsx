@@ -13,7 +13,7 @@ type InputContainerProps = {
 
 function InputContainer(props: React.PropsWithChildren<InputContainerProps>) {
 
-    const {id, text, isFormElement, className, children} = props;
+    const {id, text, isFormElement, className, children, style} = props;
 
     const {target, onChange} = useContext(NodeContext);
 
@@ -42,6 +42,7 @@ function InputContainer(props: React.PropsWithChildren<InputContainerProps>) {
         key: id,
         onDoubleClick,
         className,
+        style,
         onClick: () => {
         }
     }

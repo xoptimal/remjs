@@ -5,6 +5,7 @@ import Layers from "../Layers";
 import {BackgroundPanel, BorderPanel, Content, LayoutPanel, MPPanel, Typography} from "@/components";
 import './index.css'
 import ActionBar from "@/components/ActionBar";
+import AntDesignUI from "@/components/AntDesignUI";
 
 const CollapsePanel = Collapse.Panel;
 
@@ -24,15 +25,15 @@ export default function Editor(props: any) {
     const {treeData = []} = props;
 
     const leftItems = [
-        {
-            label: <div><BlockOutlined/><span>图层</span></div>,
-            key: "Layers",
-            children: <Layers treeData={treeData}/>,
-        },
+        // {
+        //     label: <div><BlockOutlined/><span>图层</span></div>,
+        //     key: "Layers",
+        //     children: <Layers treeData={treeData}/>,
+        // },
         {
             label: <IconText icon={<PlusCircleOutlined/>} text={"组件"}/>,
             key: "components",
-            children: <span></span>,
+            children: <AntDesignUI />,
         },
     ];
 

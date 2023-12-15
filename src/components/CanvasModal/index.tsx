@@ -10,7 +10,6 @@ export default function CanvasModal(props: ModalProps) {
     }
 
     const onOk = (values: any) => {
-        console.log('111')
     }
 
     return <Modal title={"新建画布"}
