@@ -7,8 +7,12 @@ a {
   text-decoration: none;
 }
 
-#rem-content {
+.rem-card:hover {
+  box-shadow: 0 6px 16px -8px #00000014, 0 9px 28px #0000000d,
+    0 12px 48px 16px #00000008;
+}
 
+#rem-content {
   .ant-btn:hover {
     color: rgba(0, 0, 0, 0.88);
     border-color: transparent;
@@ -17,7 +21,6 @@ a {
   a {
     color: rgba(0, 0, 0, 0.88);
   }
-
 }
 
 #rem-content * {
@@ -28,7 +31,12 @@ a {
   cursor: url(/svg/mouse_active.svg), auto;
 }
 
-
 :where(.rem-item):not(.rem-selected):hover {
   outline: solid 3px var(--primary-color);
 }
+
+.rem-action-bar {
+  width: 48px;
+  height: 100%;
+}
+

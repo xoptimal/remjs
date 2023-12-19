@@ -78,37 +78,37 @@ const Core: React.FC<CoreProps> = (props) => {
           onSave(elements);
         }
         break;
-      case EventType.ADD_REACT:
-        {
-          const firstPropertyId = Object.keys(elementsRef.current)[0];
-          const element = createExtensionElement(firstPropertyId, {
-            position: data.position,
-            source: "div",
-            className: ["w-1px", "h-1px", "bg-[#cccccc]"],
-          });
-          
-          setElements((prev) => {
-            const temp = { ...prev };
-            temp[firstPropertyId].children.push(element);
-            temp[element.id] = element;
+      // case EventType.ADD_REACT:
+      //   {
+      //     const firstPropertyId = Object.keys(elementsRef.current)[0];
+      //     const element = createExtensionElement(firstPropertyId, {
+      //       position: data.position,
+      //       source: "div",
+      //       className: ["w-1px", "h-1px", "bg-[#cccccc]"],
+      //     });
 
-            //  sync
-            elementsRef.current = temp;
-            return temp;
-          });
+      //     setElements((prev) => {
+      //       const temp = { ...prev };
+      //       temp[firstPropertyId].children.push(element);
+      //       temp[element.id] = element;
 
-          //  wait 10ms update mouse point style
-          setTimeout(() => {
-            // 选择当前目标
-            emitter.emit({
-              type: EventType.SELECT_NODE,
-              nodeIds: [element.id],
-              added: true,
-            });
-          }, 10);
-        }
-        break;
-      case EventType.ADD_EXTENSION_ELEMENT:
+      //       //  sync
+      //       elementsRef.current = temp;
+      //       return temp;
+      //     });
+
+      //     //  wait 10ms update mouse point style
+      //     setTimeout(() => {
+      //       // 选择当前目标
+      //       emitter.emit({
+      //         type: EventType.SELECT_NODE,
+      //         nodeIds: [element.id],
+      //         added: true,
+      //       });
+      //     }, 10);
+      //   }
+      //   break;
+      case EventType.ADD_ELEMENT:
         {
           const firstPropertyId = Object.keys(elementsRef.current)[0];
           const element = createExtensionElement(firstPropertyId, data);
@@ -310,12 +310,12 @@ const Core: React.FC<CoreProps> = (props) => {
       <div className={"w-full h-full bg-white"}>
         <div
           className={
-            "w-full h-50px flex justify-between items-center px-8px border-b-solid border-b-[1px] border-b-gray-200"
+            "w-full h-50px bg-[#1e1e1e] flex justify-between items-center px-8px"
           }
         >
           <div className={"flex items-center"}>
             <Space>
-              <span>REM</span>
+              <span className="text-white">REM</span>
             </Space>
             <Divider type={"vertical"} />
           </div>
@@ -331,6 +331,7 @@ const Core: React.FC<CoreProps> = (props) => {
           <Space>
             <Button onClick={onCancel}>取消</Button>
             <Button
+              style={{ background: "white" }}
               type={"primary"}
               disabled={elements === null}
               onClick={handleSave}

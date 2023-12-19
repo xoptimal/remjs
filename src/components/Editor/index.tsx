@@ -78,10 +78,10 @@ export default function Editor(props: any) {
 
     return (
         <div className={"flex"}>
-            <div className={"h-[calc(100vh-50px)] p-6px border-r-solid border-r-1px border-r-gray-200"}>
+            <div className={"h-[calc(100vh-50px)"}>
                 <ActionBar/>
             </div>
-            <div
+            {/* <div
                 className={
                     "h-[calc(100vh-50px)] w-[370px] border-r-[1px] border-b-gray-200"
                 }
@@ -91,8 +91,8 @@ export default function Editor(props: any) {
                     defaultActiveKey="Layers"
                     items={leftItems}
                 />
-            </div>
-            <div className={"h-[calc(100vh-50px)] w-[calc(100vw-727px)] relative flex flex-col justify-center"}>
+            </div> */}
+            <div className={"h-[calc(100vh-50px)] w-[calc(100vw-357px)] bg-red relative flex flex-col justify-center"}>
                 <Content>{props.children}</Content>
             </div>
             <div

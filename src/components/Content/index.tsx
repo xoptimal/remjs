@@ -93,32 +93,45 @@ export default function Content(props: React.PropsWithChildren) {
 
   const [init, setInit] = useState(false);
 
-  emitter.useSubscription(({ type, nodeIds }) => {
+  const paintingRef = useRef<any>();
+
+  emitter.useSubscription(({ type, nodeIds, data }) => {
+
+    if(type === EventType.ACTION_RECT){
+      paintingRef.current = data;
+    }
+
+    //  重制状态
+    if (type === EventType.SELECT) {
+      paintingRef.current = null;
+    }
+
     if (type === EventType.INIT && getContentStyle().opacity === 1) {
       setContentStyle((prev) => ({ ...prev, opacity: 0 }));
     }
 
-    if (type === EventType.ACTION_RECT) {
-      setContentStyle((prev) => ({ ...prev, cursor: "crosshair" }));
-    }
+    // if (type === EventType.ACTION_RECT) {
+    //   //setContentStyle((prev) => ({ ...prev, cursor: "crosshair" }));
+    // }
 
-    if (
-      type === EventType.ACTION_MOVE ||
-      type === EventType.ADD_EXTENSION_ELEMENT
-    ) {
-      setContentStyle((prev) => ({ ...prev, cursor: "default" }));
-    }
+    // if (
+    //   type === EventType.SELECT ||
+    //   type === EventType.ADD_ELEMENT
+    // ) {
+    //   setContentStyle((prev) => ({ ...prev, cursor: "default" }));
+    // }
 
-    if (type === EventType.ACTION_TEXT) {
+
+    if (type === EventType.ADD_TEXT) {
       setContentStyle((prev) => ({ ...prev, cursor: "text" }));
     }
 
-    if (type === EventType.GRAB) {
-      setContentStyle((prev) => ({
-        ...prev,
-        cursor: `url("/svg/mouse_active.svg"), auto`,
-      }));
-    }
+    // if (type === EventType.GRAB) {
+    //   setContentStyle((prev) => ({
+    //     ...prev,
+    //     cursor: `url("/svg/mouse_active.svg"), auto`,
+    //   }));
+    // }
   });
 
   const handleContextMenu: DropdownProps["onOpenChange"] = () => {
@@ -197,8 +210,9 @@ export default function Content(props: React.PropsWithChildren) {
   useEventListener(
     "mousedown",
     (e) => {
-      if (contentStyle.cursor === "crosshair") {
 
+      if (paintingRef.current) {
+        
         setMousedown({ down: true, offsetX: e.clientX, offsetY: e.clientY });
 
         const offsetX =
@@ -208,7 +222,7 @@ export default function Content(props: React.PropsWithChildren) {
 
         const position = { x: offsetX, y: offsetY };
 
-        emitter.emit({ type: EventType.ADD_REACT, data: { position } });
+        emitter.emit({ type: EventType.ADD_ELEMENT, data: { position, ...paintingRef.current } });
         
         e.preventDefault();
       }
@@ -254,12 +268,12 @@ export default function Content(props: React.PropsWithChildren) {
     <>
       <div
         className={
-          "relative w-full h-[calc(100vh-80px)] overscroll-none preserve-3d bd-0 overflow-hidden bg-#ebeced"
+          "relative w-full h-full overscroll-none preserve-3d bd-0 overflow-hidden bg-#ebeced"
         }
         style={{ cursor: isKeyDown ? "grab" : "auto" }}
       >
         <div className={"relative w-30px h-30px bg-#444 box-border z-21"}></div>
-        <div className={"absolute top-1 left-30px w-full h-30px z-1"}>
+        <div className={"absolute top-0 left-30px w-full h-30px z-1"}>
           <Guides
             ref={horizontalGuidesRef}
             type="horizontal"
@@ -317,7 +331,7 @@ export default function Content(props: React.PropsWithChildren) {
             >
               {children}
             </Dropdown>
-            <Movable mousedown={mousedown} contentStyle={contentStyle} />
+            <Movable mousedown={mousedown} />
           </div>
         </InfiniteViewer>
       </div>

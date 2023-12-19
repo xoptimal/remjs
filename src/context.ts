@@ -7,15 +7,18 @@ export enum EventType {
   SAVE,
   SELECT_TREE,
   SELECT_NODE,
-  ACTION_TEXT,
-  ACTION_MOVE,
+  ADD_TEXT,
+  SELECT,
   ACTION_RECT,
-  ADD_REACT,
-  ADD_EXTENSION_ELEMENT,
+  ADD_LAYOUT,
+  ADD_ELEMENT,
   INIT,
   DELETE,
   GRAB,
-} export type EventProps<T = any> = { type: EventType;
+  ACTION_ANTDESIGN,
+} 
+
+export type EventProps<T = any> = { type: EventType;
   nodeIds?: string[];
   data?: T;
   added?: boolean;

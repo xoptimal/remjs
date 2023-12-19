@@ -705,8 +705,6 @@ export function createCanvas(canvas: CanvasType) {
         <Button className="absolute left-0 top-0 translate-x-[47px] translate-y-[78px]">按钮</Button><Button className="absolute left-0 top-0 translate-x-[47px] translate-y-[417px]">按钮</Button></div>
     ); } 
   
-  
-  
   `;
   return createElement({ path: "", content });
 
