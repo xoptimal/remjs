@@ -1,4 +1,3 @@
-import { MouseDown } from "@/components/Content";
 import NodeContext, { EventType } from "@/context";
 import { findKeyByClassName } from "@/helpers/core";
 import useKeyDown from "@/hooks/useKeyDown";
@@ -48,10 +47,6 @@ const DimensionViewable = {
   },
 } as const;
 
-type MovableProps = {
-  mousedown: MouseDown;
-};
-
 const snapContainer = ".rem-elements";
 const rootContainer = "#rem-content";
 const verticalGuidelines = [50, 150, 250, 450, 550];
@@ -66,9 +61,7 @@ const snapDirections = {
   middle: true,
 };
 
-export default function Movable(props: MovableProps) {
-  const { mousedown } = props;
-
+export default function Movable() {
   const { emitter, target, setTarget } = useContext(NodeContext);
   const { onChange } = useContext(NodeContext);
 
@@ -76,24 +69,29 @@ export default function Movable(props: MovableProps) {
   const [elementGuidelines, setElementGuideLiens] = useState<any[]>([]);
 
   const paintingRef = useRef<any>(null);
-  const selectorRef = React.useRef<Selector>(null);
-  const movableRef = React.useRef<ReactMovable>(null);
-  const groupManagerRef = React.useRef<GroupManager>();
+  const selectorRef = useRef<Selector>(null);
+  const movableRef = useRef<ReactMovable>(null);
+  const groupManagerRef = useRef<GroupManager>();
+  const rootContainerRef = useRef<HTMLElement | null>(null);
 
   const { isKeyDown, key } = useKeyDown(["meta", "shift", "space"]);
 
+  useEffect(() => {
+    rootContainerRef.current = document.querySelector(rootContainer);
+  }, []);
+
   emitter.useSubscription(
     ({ type, nodeIds, added = false, elements, data }) => {
-      if (type === EventType.ACTION_RECT) {
+      if (type === EventType.PAINTING) {
         paintingRef.current = data;
       }
 
       //  重制状态
-      if (type === EventType.SELECT) {
+      if (type === EventType.DEFAULT) {
         paintingRef.current = null;
       }
 
-      if (type === EventType.SELECT_NODE) {
+      if (type === EventType.SEL_ELEMENT) {
         if (added) init();
 
         const elements = selectorRef.current!.getSelectableElements();
@@ -128,6 +126,34 @@ export default function Movable(props: MovableProps) {
   };
 
   useEventListener(
+    "mousedown",
+    (e) => {
+      if (paintingRef.current) {
+        const offsetX =
+          e.clientX - rootContainerRef.current!.getBoundingClientRect().left;
+        const offsetY =
+          e.clientY - rootContainerRef.current!.getBoundingClientRect().top;
+
+        const position = { x: offsetX, y: offsetY };
+
+        emitter.emit({
+          type: EventType.ADD_ELEMENT,
+          data: { position, ...paintingRef.current },
+        });
+
+        if (paintingRef.current.isDraw) {
+          //setMousedown({ down: true, offsetX: e.clientX, offsetY: e.clientY });
+          paintingRef.current.offsetX = e.clientX;
+          paintingRef.current.offsetY = e.clientY;
+        }
+
+        e.preventDefault();
+      }
+    },
+    { target: rootContainerRef.current }
+  );
+
+  useEventListener(
     "mousemove",
     (event) => {
       if (
@@ -135,8 +161,8 @@ export default function Movable(props: MovableProps) {
         paintingRef.current?.isDraw &&
         target
       ) {
-        const deltaX = event.clientX - mousedown.offsetX;
-        const deltaY = event.clientY - mousedown.offsetY;
+        const deltaX = event.clientX - paintingRef.current.offsetX;
+        const deltaY = event.clientY - paintingRef.current.offsetY;
 
         movableRef.current!.request(
           "resizable",
@@ -145,14 +171,16 @@ export default function Movable(props: MovableProps) {
         );
       }
     },
-    { target: document.querySelector(rootContainer) }
+    { target: rootContainerRef.current }
   );
 
   useEventListener(
     "mouseup",
-    (event) => {
-      if (paintingRef.current && target) {
-        if (paintingRef.current.isDraw) {
+    () => {
+      const painting = paintingRef.current;
+
+      if (painting) {
+        if (painting.isDraw && target) {
           const style = movableRef.current!.getDragElement()!.style;
           const mutuallyExclusives = target!.className.filter(
             (find) => find.indexOf("w-") > -1 || find.indexOf("h-") > -1
@@ -174,24 +202,12 @@ export default function Movable(props: MovableProps) {
             const className = [`w-[${style.width}]`, `h-[${style.height}]`];
             onChange({ className, mutuallyExclusives });
           }
-        } else {
-          const container = document.querySelector(rootContainer);
-          const offsetX =
-            event.clientX - container!.getBoundingClientRect().left;
-          const offsetY =
-            event.clientY - container!.getBoundingClientRect().top;
-
-          const position = { x: offsetX, y: offsetY };
-          emitter.emit({
-            type: EventType.ADD_ELEMENT,
-            data: { position, ...paintingRef.current },
-          });
         }
-
-        emitter.emit({ type: EventType.SELECT });
+        //  回到默认状态
+        emitter.emit({ type: EventType.DEFAULT });
       }
     },
-    { target: document.querySelector(rootContainer) }
+    { target: rootContainerRef.current }
   );
 
   function init() {
@@ -236,7 +252,7 @@ export default function Movable(props: MovableProps) {
         selectorRef.current!.setSelectedTargets([]);
         setTargets(nextTargets);
         setTarget();
-        emitter.emit({ type: EventType.SELECT_TREE, nodeIds: [] });
+        emitter.emit({ type: EventType.SEL_ELELEMT_TO_TREE, nodeIds: [] });
         return;
       }
 

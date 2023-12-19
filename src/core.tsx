@@ -127,7 +127,7 @@ const Core: React.FC<CoreProps> = (props) => {
           setTimeout(() => {
             // 选择当前目标
             emitter.emit({
-              type: EventType.SELECT_NODE,
+              type: EventType.SEL_ELEMENT,
               nodeIds: [element.id],
               added: true,
             });
@@ -212,7 +212,7 @@ const Core: React.FC<CoreProps> = (props) => {
         setTarget(null);
 
         // 同步Movable
-        emitter.emit({ type: EventType.SELECT_NODE, nodeIds: [], added: true });
+        emitter.emit({ type: EventType.SEL_ELEMENT, nodeIds: [], added: true });
       }
     },
     { events: ["keyup"], useCapture: true }

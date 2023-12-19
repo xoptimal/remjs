@@ -13,7 +13,7 @@ export default function Layers(props: any) {
   const { emitter, setTarget } = useContext(NodeContext);
 
   emitter.useSubscription(({type, nodeIds}) => {
-      if (type === EventType.SELECT_TREE) {
+      if (type === EventType.SEL_ELELEMT_TO_TREE) {
         let arr: Key[] = [];
         nodeIds?.forEach((item) => {
           if (Array.isArray(item)) {
@@ -30,7 +30,7 @@ export default function Layers(props: any) {
 
   const onSelect: TreeProps["onSelect"] = (keys) => {
     const nodeIds = keys[0] === selectedKeys[0] ? [] : keys;
-    emitter.emit({ type: EventType.SELECT_NODE, nodeIds });
+    emitter.emit({ type: EventType.SEL_ELEMENT, nodeIds });
     setSelectedKeys(nodeIds);
   };
 

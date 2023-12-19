@@ -2,20 +2,42 @@ import { EventEmitter } from "ahooks/lib/useEventEmitter";
 import React from "react";
 
 export enum EventType {
-  SYNC_ELEMENTS, //  同步elements
-  CANCEL,
-  SAVE,
-  SELECT_TREE,
-  SELECT_NODE,
-  ADD_TEXT,
-  SELECT,
-  ACTION_RECT,
-  ADD_LAYOUT,
-  ADD_ELEMENT,
+
+  //  初始化内容
   INIT,
-  DELETE,
+
+  //  同步elements(结合SAVE使用)
+  SYNC_ELEMENTS,
+  
+  //  保存
+  SAVE,
+
+  //  取消
+  CANCEL,
+
+  //  默认
+  DEFAULT,
+
+  //  绘制
+  PAINTING,
+
+  //  添加元素
+  ADD_ELEMENT,
+
+  //  删除元素
+  DEL_ELEMENT,
+
+  //  选择元素
+  SEL_ELEMENT,
+
+  //  从树中选择元素
+  SEL_ELELEMT_TO_TREE,
+
+  // 待定
   GRAB,
   ACTION_ANTDESIGN,
+  ADD_TEXT,
+  ADD_LAYOUT,
 } 
 
 export type EventProps<T = any> = { type: EventType;

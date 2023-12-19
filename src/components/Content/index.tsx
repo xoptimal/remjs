@@ -1,7 +1,7 @@
 import {
-    DesktopOutlined,
-    MobileOutlined,
-    TabletOutlined,
+  DesktopOutlined,
+  MobileOutlined,
+  TabletOutlined,
 } from "@ant-design/icons";
 import Guides from "@scena/react-guides";
 import { Dropdown, DropdownProps, InputNumber, MenuProps } from "antd";
@@ -12,11 +12,7 @@ import InfiniteViewer from "react-infinite-viewer";
 import { Guide, Movable } from "@/components";
 import NodeContext, { EventType } from "@/context";
 import useKeyDown from "@/hooks/useKeyDown";
-import {
-    useAsyncEffect,
-    useEventListener,
-    useGetState
-} from "ahooks";
+import { useAsyncEffect, useEventListener, useGetState } from "ahooks";
 
 const deviceList = [
   { label: <DesktopOutlined />, key: "pc", width: 1000 },
@@ -96,18 +92,21 @@ export default function Content(props: React.PropsWithChildren) {
   const paintingRef = useRef<any>();
 
   emitter.useSubscription(({ type, nodeIds, data }) => {
+    if (type === EventType.INIT && getContentStyle().opacity === 1) {
+      setContentStyle((prev) => ({ ...prev, opacity: 0 }));
+    }
 
-    if(type === EventType.ACTION_RECT){
+    if (type === EventType.PAINTING) {
       paintingRef.current = data;
     }
 
     //  重制状态
-    if (type === EventType.SELECT) {
+    if (type === EventType.DEFAULT) {
       paintingRef.current = null;
     }
 
-    if (type === EventType.INIT && getContentStyle().opacity === 1) {
-      setContentStyle((prev) => ({ ...prev, opacity: 0 }));
+    if (type === EventType.ADD_TEXT) {
+      setContentStyle((prev) => ({ ...prev, cursor: "text" }));
     }
 
     // if (type === EventType.ACTION_RECT) {
@@ -120,11 +119,6 @@ export default function Content(props: React.PropsWithChildren) {
     // ) {
     //   setContentStyle((prev) => ({ ...prev, cursor: "default" }));
     // }
-
-
-    if (type === EventType.ADD_TEXT) {
-      setContentStyle((prev) => ({ ...prev, cursor: "text" }));
-    }
 
     // if (type === EventType.GRAB) {
     //   setContentStyle((prev) => ({
@@ -206,29 +200,6 @@ export default function Content(props: React.PropsWithChildren) {
     offsetX: 0,
     offsetY: 0,
   });
-
-  useEventListener(
-    "mousedown",
-    (e) => {
-
-      if (paintingRef.current) {
-        
-        setMousedown({ down: true, offsetX: e.clientX, offsetY: e.clientY });
-
-        const offsetX =
-          e.clientX - contentRef.current!.getBoundingClientRect().left;
-        const offsetY =
-          e.clientY - contentRef.current!.getBoundingClientRect().top;
-
-        const position = { x: offsetX, y: offsetY };
-
-        emitter.emit({ type: EventType.ADD_ELEMENT, data: { position, ...paintingRef.current } });
-        
-        e.preventDefault();
-      }
-    },
-    { target: contentRef.current }
-  );
 
   const onClick: MenuProps["onClick"] = (e) => {
     if (!target) return;
@@ -331,7 +302,7 @@ export default function Content(props: React.PropsWithChildren) {
             >
               {children}
             </Dropdown>
-            <Movable mousedown={mousedown} />
+            <Movable  />
           </div>
         </InfiniteViewer>
       </div>
