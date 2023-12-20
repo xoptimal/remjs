@@ -148,7 +148,7 @@ export default function ActionBar() {
     },
     {
       key: "layout",
-      type: EventType.ADD_LAYOUT,
+      type: EventType.PAINTING,
       label: "布局",
       icon: <Layout size={18} />,
     },
@@ -168,9 +168,13 @@ export default function ActionBar() {
     },
     {
       key: "text",
-      type: EventType.ADD_TEXT,
+      type: EventType.PAINTING,
       label: "文本",
       icon: <TextCursorInput size={18} />,
+      data: {
+        source: "span",
+        text: "请输入文本内容",
+      },
     },
     {
       key: "antd",

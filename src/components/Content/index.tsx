@@ -105,9 +105,9 @@ export default function Content(props: React.PropsWithChildren) {
       paintingRef.current = null;
     }
 
-    if (type === EventType.ADD_TEXT) {
-      setContentStyle((prev) => ({ ...prev, cursor: "text" }));
-    }
+    // if (type === EventType.ADD_TEXT) {
+    //   setContentStyle((prev) => ({ ...prev, cursor: "text" }));
+    // }
 
     // if (type === EventType.ACTION_RECT) {
     //   //setContentStyle((prev) => ({ ...prev, cursor: "crosshair" }));

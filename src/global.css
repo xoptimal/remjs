@@ -13,6 +13,9 @@ a {
 }
 
 #rem-content {
+
+  cursor: url(/svg/mouse_active.svg), auto;
+  
   .ant-btn:hover {
     color: rgba(0, 0, 0, 0.88);
     border-color: transparent;
@@ -28,7 +31,7 @@ a {
 }
 
 #rem-content *:hover {
-  cursor: url(/svg/mouse_active.svg), auto;
+  /* cursor: url(/svg/mouse_active.svg), auto; */
 }
 
 :where(.rem-item):not(.rem-selected):hover {

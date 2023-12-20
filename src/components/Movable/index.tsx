@@ -179,16 +179,19 @@ export default function Movable() {
     () => {
       const painting = paintingRef.current;
 
-      if (painting) {
-        if (painting.isDraw && target) {
-          const style = movableRef.current!.getDragElement()!.style;
+      if (painting && target) {
+        const element = movableRef.current!.getDragElement() as HTMLElement;
+
+        if (painting.isDraw) {
+          const style = element.style;
           const mutuallyExclusives = target!.className.filter(
             (find) => find.indexOf("w-") > -1 || find.indexOf("h-") > -1
           );
 
+          let className = [`w-[${style.width}]`, `h-[${style.height}]`];
+
           if (style.height.length === 0 && style.width.length === 0) {
-            const className = [`w-[100px]`, `h-[100px]`];
-            onChange({ className, mutuallyExclusives: ["w-1px", "h-1px"] });
+            className = [`w-[100px]`, `h-[100px]`];
 
             if (target.position) {
               movableRef.current!.request("draggable", {
@@ -197,12 +200,18 @@ export default function Movable() {
                 y: target.position.y - 50,
               });
             }
-          } else {
-            // mouse move
-            const className = [`w-[${style.width}]`, `h-[${style.height}]`];
-            onChange({ className, mutuallyExclusives });
           }
+
+          onChange({ className, mutuallyExclusives });
+        } else {
+          //  针对元素做居中处理 (暂时取消)
+          // movableRef.current!.request("draggable", {
+          //   isInstant: true,
+          //   x: target.position!.x - element.clientWidth / 2,
+          //   y: target.position!.y - element.clientHeight / 2,
+          // });
         }
+
         //  回到默认状态
         emitter.emit({ type: EventType.DEFAULT });
       }
