@@ -47,14 +47,15 @@ export default function Layers(props: any) {
   //   setHeight(ref.current?.clientHeight || 0);
   // }, []);
 
-  return (
+  return treeData.length > 0 &&(
     <DirectoryTree
       multiple
-      //height={height}
+      height={500}
       showIcon={false}
       autoExpandParent
       onRightClick={onRightClick}
       expandedKeys={expandedKeysValue}
+      defaultExpandAll
       onExpand={onExpand}
       onSelect={onSelect}
       selectedKeys={selectedKeys}

@@ -58,7 +58,7 @@ export default function Editor(props: any) {
       label: <IconText icon={<HighlightOutlined />} text={"样式"} />,
       key: "panel",
       children: (
-        <Collapse activeKey={rightActivities} onChange={setRightActivities}>
+        <Collapse activeKey={rightActivities} onChange={setRightActivities} className="h-[calc(100vh-550px)] overflow-y-auto">
           <CollapsePanel header="Layout" key="Layout">
             <LayoutPanel />
           </CollapsePanel>
@@ -107,13 +107,12 @@ export default function Editor(props: any) {
       </div>
       <div className="h-[calc(100vh-50px)] w-[357px] border-l-[1px] border-b-gray-200">
         <Tabs
-          style={{ height: "60%", overflow: "hidden" }}
+          style={{ height: `calc(100vh - 550px)`, overflow: "hidden" }}
           defaultActiveKey={"panel"}
           className="rem-device-tab border-b-[1px] border-b-gray-200"
           items={rightItems}
         />
-
-        <div className="h-[40%] w-full overflow-hidden border-t-10px border-black">
+        <div className="h-[500px] w-full overflow-hidden border-t-10px border-black">
           <span>图层</span>
           <Layers treeData={treeData} />
         </div>
