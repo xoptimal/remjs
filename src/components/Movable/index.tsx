@@ -268,7 +268,10 @@ export default function Movable() {
       elementHasMouseEnter.current = true;
       selectorRef.current!.setSelectedTargets(deepFlat(nextTargets));
       setTargets(nextTargets);
-      setTarget(findKeyByClassName(nextTargets[0].className));
+
+      const id = findKeyByClassName(nextTargets[0].className);
+      setTarget(id);
+      emitter.emit({ type: EventType.SEL_ELELEMT_TO_TREE, nodeIds: [id] });
 
       if (option?.added) {
         movableRef.current!.waitToChangeTarget().then(() => {

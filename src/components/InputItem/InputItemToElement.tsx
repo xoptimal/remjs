@@ -17,8 +17,6 @@ export default function InputItemToDom(
   const resetValueRef = useRef(true);
 
   useEffect(() => {
-    console.log("InputItemToDom target", target?.style);
-    
     if (target) {
       // @ts-ignore
       setValue(target.style[styleKey] || "");
@@ -45,8 +43,6 @@ export default function InputItemToDom(
 
     // @ts-ignore
     if (target && target.style[styleKey] !== debouncedValue) {
-      console.log('xx');
-      
       onChange({ style: { [styleKey]: debouncedValue } });
     }
   }, [debouncedValue]);

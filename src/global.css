@@ -13,9 +13,8 @@ a {
 }
 
 #rem-content {
-
   cursor: url(/svg/mouse_active.svg), auto;
-  
+
   .ant-btn:hover {
     color: rgba(0, 0, 0, 0.88);
     border-color: transparent;
@@ -28,6 +27,7 @@ a {
 
 #rem-content * {
   transition: none;
+  display: inline-block;
 }
 
 #rem-content *:hover {
@@ -43,3 +43,6 @@ a {
   height: 100%;
 }
 
+.ant-tree-title {
+  text-transform: capitalize;
+}

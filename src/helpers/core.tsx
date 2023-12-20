@@ -419,10 +419,10 @@ export function traversalChildren(
           text = elements[id].text;
         }
 
-        if (Node.type === "span") {
-          //  特殊处理
-          classNameList.push("inline-block");
-        }
+        // if (Node.type === "span" || Node.type === "a") {
+        //   //  特殊处理
+        //   classNameList.push("inline-block");
+        // }
 
         // else if (Node.type === "input") {
         //     value = Node.props.value || children;
@@ -464,6 +464,7 @@ export function traversalChildren(
 
 export function traversalChildrenToTree(
   data: any,
+  elements: any,
   props?: {
     className?: string | string[];
     index?: number;
@@ -485,9 +486,16 @@ export function traversalChildrenToTree(
     };
   }
 
-  if (Node.type.toString() !== "Symbol(react.fragment)") {
-    let children;
-    let type = Node.type;
+  let type = Node.type;
+
+  if (type?.displayName) {
+    type = type.displayName;
+  } else if (Node.source) {
+    type = Node.source?.displayName || Node.source;
+  }
+
+  if (type !== "Symbol(react.fragment)") {
+    let children = [];
 
     if (Node.props) {
       id = Node.props.className?.split(" ")[0];
@@ -497,7 +505,7 @@ export function traversalChildrenToTree(
 
         if (reactElements.some((element) => Array.isArray(element))) {
           children = reactElements.map((element) =>
-            traversalChildrenToTree(element)
+            traversalChildrenToTree(element, elements)
           );
         } else {
           let filter = reactElements.filter((element) =>
@@ -518,12 +526,12 @@ export function traversalChildrenToTree(
 
           children = notForElement //  判断当前筛选是否为同一元素 (for)
             ? React.Children.map(filter, (element) =>
-                traversalChildrenToTree(element)
+                traversalChildrenToTree(element, elements)
               )
-            : [traversalChildrenToTree(reactElements)];
+            : [traversalChildrenToTree(reactElements, elements)];
         }
       } else if (React.isValidElement(Node.props.children)) {
-        children = [traversalChildrenToTree(Node.props.children)];
+        children = [traversalChildrenToTree(Node.props.children, elements)];
       }
     }
 
@@ -533,9 +541,23 @@ export function traversalChildrenToTree(
       reactKey = `${id}-${props?.index}`;
     }
 
+    if (elements[id] && elements[id].children?.length > 0) {
+      const addedDomList = elements[id].children
+        .filter((item: any) => !item.deleted)
+        .map((item: any) => traversalChildrenToTree(item, elements));
+
+      if (Array.isArray(children)) {
+        children.push(...addedDomList);
+      } else if (typeof children === "string") {
+        children = [children, ...addedDomList];
+      } else {
+        children = addedDomList;
+      }
+    }
+
     return {
       key: reactKey,
-      title: <div className={"capitalize"}>{type}</div>,
+      title: type,
       children,
     };
   } else {
@@ -543,7 +565,7 @@ export function traversalChildrenToTree(
       return {
         key: Node.key,
         title: <div>Fragment</div>,
-        children: traversalChildrenToTree(Node.props.children),
+        children: traversalChildrenToTree(Node.props.children, elements),
       };
     }
 
@@ -551,7 +573,7 @@ export function traversalChildrenToTree(
       key: Node.key,
       title: <div>Fragment</div>,
       children: React.Children.map(Node.props.children, (item) =>
-        traversalChildrenToTree(item)
+        traversalChildrenToTree(item, elements)
       ),
     };
   }

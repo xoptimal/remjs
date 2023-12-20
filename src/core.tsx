@@ -9,6 +9,7 @@ import {
   createExtensionElement,
   save,
   traversalChildren,
+  traversalChildrenToTree,
 } from "@/helpers/core";
 import {
   DesktopOutlined,
@@ -153,10 +154,6 @@ const Core: React.FC<CoreProps> = (props) => {
       setTarget(null);
       setElements(data.elements);
       elementsRef.current = data.elements;
-
-      // const treeData = traversalChildrenToTree(data.elements)
-      // console.log("treeData", treeData)
-      // setTreeData()
     }
   }, [data]);
 
@@ -293,9 +290,12 @@ const Core: React.FC<CoreProps> = (props) => {
   ];
 
   const content = useMemo(() => {
-    return (
-      elements && traversalChildren(data.children, elements, { isRoot: true })
-    );
+    if (elements) {
+      const treeData = traversalChildrenToTree(data.children, elements);
+      setTreeData([treeData]);
+      return traversalChildren(data.children, elements, { isRoot: true });
+    }
+    return null;
   }, [elements]);
 
   return (
