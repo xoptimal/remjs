@@ -97,6 +97,19 @@ function getItemByPath(items: any[], keyPath: string[]) {
   }
 }
 
+function renderMoreItem(icon: React.ReactNode) {
+  return (
+    <div className="relative">
+      {icon}
+      <img
+        className=" absolute right-[-2px] bottom-[-2px] w-10px h-10px"
+        alt=""
+        src="svg/ic_show_more.svg"
+      />
+    </div>
+  );
+}
+
 export default function ActionBar() {
   const { emitter } = useContext(NodeContext);
   const [selectedKeys, setSelectedKey] = useState<any[]>(["default"]);
@@ -128,7 +141,7 @@ export default function ActionBar() {
             }}
             trigger={["contextMenu"]}
           >
-            {React.cloneElement(find.icon, { size: 18 })}
+            {renderMoreItem(React.cloneElement(find.icon, { size: 18 }))}
           </Dropdown>
         ),
       });
@@ -162,7 +175,7 @@ export default function ActionBar() {
           }}
           trigger={["contextMenu"]}
         >
-          <Square size={18} />
+          {renderMoreItem(<Square size={18} />)}
         </Dropdown>
       ),
     },
@@ -180,7 +193,9 @@ export default function ActionBar() {
       key: "antd",
       type: EventType.ACTION_ANTDESIGN,
       label: "Ant Design 组件",
-      icon: <img className="w-18px h-18px" src="svg/antd.svg" />,
+      icon: renderMoreItem(
+        <img className="w-18px h-18px" src="svg/antd.svg" />
+      ),
       children: antdItems,
       // icon: (
       //   <Dropdown
