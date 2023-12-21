@@ -104,19 +104,25 @@ export default function Editor(props: any) {
     delay: isPreview ? 500 : 50,
   });
 
+  const contentStyle = useSpring({
+    from: {  opacity: 0 },
+    to: {
+      opacity: 1,
+    },
+    
+    delay: isPreview ? 500 : 50,
+  });
+
   return (
     <div className={"flex h-[calc(100vh-50px)] w-full overflow-hidden"}>
       <animated.div style={leftStyle} className={"h-[calc(100vh-50px)]"}>
         <ActionBar />
       </animated.div>
       <div
-        className={
-          isPreview
-            ? "h-[calc(100vh-50px)] flex-1 bg-[#ebeced] relative overflow-y-auto"
-            : "h-[calc(100vh-50px)] flex-1 bg-[#ebeced] relative"
-        }
+        className={"h-[calc(100vh-50px)] flex-1 bg-[#ebeced] relative overflow-hidden"}
       >
-        <Content>{props.children}</Content>
+{/*         {isPreview ? props.children: <Content>{props.children}</Content>}
+ */}        <Content>{props.children}</Content>
       </div>
       <animated.div
         style={rightStyle}

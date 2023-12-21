@@ -376,7 +376,10 @@ export function traversalChildren(
           classNameList.push(props.className);
         }
       }
-      if (!props?.isRoot) {
+
+      if (props?.isRoot) {
+        classNameList.push("rem-container");
+      } else {
         classNameList.push("rem-item");
       }
 

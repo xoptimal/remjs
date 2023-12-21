@@ -4,16 +4,22 @@ import {
   TabletOutlined,
 } from "@ant-design/icons";
 import Guides from "@scena/react-guides";
-import { Dropdown, DropdownProps, InputNumber, MenuProps } from "antd";
-import React, { Fragment, useContext, useRef, useState } from "react";
+import { Dropdown, DropdownProps, MenuProps } from "antd";
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import InfiniteViewer from "react-infinite-viewer";
 
 // import styles from "./index.module.less";
-import { Guide, Movable } from "@/components";
+import { Movable } from "@/components";
 import NodeContext, { EventType } from "@/context";
 import useKeyDown from "@/hooks/useKeyDown";
 import { animated, useSpring } from "@react-spring/web";
-import { useAsyncEffect, useGetState } from "ahooks";
+import { useAsyncEffect, useGetState, useKeyPress } from "ahooks";
 
 const deviceList = [
   { label: <DesktopOutlined />, key: "pc", width: 1000 },
@@ -71,7 +77,7 @@ export default function Content(props: React.PropsWithChildren) {
 
   const viewerRef = React.useRef<InfiniteViewer>(null);
 
-  const { isKeyDown } = useKeyDown("space");
+  // const { isKeyDown } = useKeyDown("space");
 
   const [device, setDevice] = useState(0);
 
@@ -129,6 +135,20 @@ export default function Content(props: React.PropsWithChildren) {
     // }
   });
 
+  useEffect(() => {
+    if (isPreview) {
+      setTimeout(() => {
+        setZoom(1);
+        viewerRef.current?.setZoom(1);
+        const containerWidth =
+          viewerRef.current?.getContainer().clientWidth || 0;
+        const scrollLeft =
+          (containerWidth - contentRef.current!.clientWidth) / 2;
+        viewerRef.current?.scrollTo(-scrollLeft, -240);
+      }, 1000);
+    }
+  }, [isPreview]);
+
   const handleContextMenu: DropdownProps["onOpenChange"] = () => {
     setOpenContextMenu(target !== null);
   };
@@ -148,7 +168,16 @@ export default function Content(props: React.PropsWithChildren) {
     //  缓冲个10ms, 确认前面的state已经render
     await wait(10);
     // 居中
-    viewerRef.current?.scrollCenter();
+
+    if (clientHeight < document.body.clientHeight) {
+      viewerRef.current?.scrollCenter();
+    } else {
+      const containerWidth = viewerRef.current?.getContainer().clientWidth || 0;
+      const scrollLeft = (containerWidth - clientWidth) / 2;
+      viewerRef.current?.scrollTo(-scrollLeft, -240);
+    }
+
+    // viewerRef.current?.scrollCenter();
     //  展示
     setContentStyle({ ...temp, opacity: 1 });
   }
@@ -173,28 +202,37 @@ export default function Content(props: React.PropsWithChildren) {
     }
   }, [childrenProps]);
 
-  function resize() {
-    const containerWidth = viewerRef.current?.getContainerWidth() || 0;
-    if (containerWidth > 0) {
-      if (containerWidth - 100 < deviceList[device].width) {
-        const zoom = (containerWidth - 100) / deviceList[device].width;
-        viewerRef.current?.setZoom(zoom);
-        setZoom(zoom);
-      } else {
-        viewerRef.current?.setZoom(1);
-        setZoom(1);
-      }
-      viewerRef.current?.scrollCenter();
-    }
-  }
+  useKeyPress("space", (event) => {
+    viewerRef.current?.setZoom(1);
+    const containerWidth = viewerRef.current?.getContainer().clientWidth || 0;
+    const scrollLeft = (containerWidth - contentRef.current!.clientWidth) / 2;
+    viewerRef.current?.scrollTo(-scrollLeft, -240);
 
-  function handleChangeDevice(event: React.ChangeEvent<{}>, newValue: number) {
-    setDevice(newValue);
-    resize();
-    setTimeout(() => {
-      viewerRef.current?.scrollCenter();
-    }, 0);
-  }
+    event.preventDefault();
+  });
+
+  // function resize() {
+  //   const containerWidth = viewerRef.current?.getContainerWidth() || 0;
+  //   if (containerWidth > 0) {
+  //     if (containerWidth - 100 < deviceList[device].width) {
+  //       const zoom = (containerWidth - 100) / deviceList[device].width;
+  //       viewerRef.current?.setZoom(zoom);
+  //       setZoom(zoom);
+  //     } else {
+  //       viewerRef.current?.setZoom(1);
+  //       setZoom(1);
+  //     }
+  //     viewerRef.current?.scrollCenter();
+  //   }
+  // }
+
+  // function handleChangeDevice(event: React.ChangeEvent<{}>, newValue: number) {
+  //   setDevice(newValue);
+  //   resize();
+  //   setTimeout(() => {
+  //     viewerRef.current?.scrollCenter();
+  //   }, 0);
+  // }
 
   const onClick: MenuProps["onClick"] = (e) => {
     if (!target) return;
@@ -253,96 +291,111 @@ export default function Content(props: React.PropsWithChildren) {
       height: isPreview ? 0 : 30,
       top: isPreview ? -30 : 0,
     },
-    delay: isPreview ? 50 : 500,
+    delay: isPreview ? 30 : 300,
   });
 
+  const scrollOptions = {
+    container: () => viewerRef.current!.getContainer(),
+    threshold: 20,
+    getScrollPosition: () => {
+      return [
+        viewerRef.current!.getScrollLeft({ absolute: true }),
+        viewerRef.current!.getScrollTop({ absolute: true }),
+      ];
+    },
+  };
+
   return (
-    isPreview? children:
-      <div
+    <>
+      {/* <div
         className={
           "relative w-full h-full overscroll-none preserve-3d bd-0 overflow-hidden"
         }
         //style={{ cursor: isKeyDown ? "grab" : "auto" }}
+      > */}
+
+      <animated.div
+        style={topStyle}
+        className={"absolute w-30px h-30px bg-#444 box-border z-2"}
+      ></animated.div>
+
+      <animated.div
+        style={topStyle}
+        className={"absolute top-0 left-0px w-full h-30px z-1"}
       >
-        <animated.div
-          style={topStyle}
-          className={"absolute w-30px h-30px bg-#444 box-border z-1"}
-        ></animated.div>
+        <Guides
+          ref={horizontalGuidesRef}
+          type="horizontal"
+          displayDragPos={true}
+          displayGuidePos={true}
+          zoom={zoom}
+          useResizeObserver={true}
+        />
+      </animated.div>
 
-        <animated.div
-          style={topStyle}
-          className={"absolute top-0 left-30px w-full h-30px z-1"}
+      <animated.div
+        style={leftStyle}
+        className={"absolute left-0px top-0px w-30px h-[calc(100vh-30px)] z-1"}
+      >
+        <Guides
+          ref={verticalGuidesRef}
+          type="vertical"
+          displayDragPos={true}
+          zoom={zoom}
+          displayGuidePos={true}
+          useResizeObserver={true}
+        />
+      </animated.div>
+
+      <InfiniteViewer
+        className={"w-full h-full relative bg-#333 br-0"}
+        ref={viewerRef}
+        // margin={0}
+        // threshold={0}
+        // rangeX={[0, 0]}
+        // rangeY={[0, 0]}
+        //threshold={20}
+        // displayHorizontalScroll={true}
+        // displayVerticalScroll={true}
+        //usePinch={!isPreview}
+        maxPinchWheel={10}
+        zoom={zoom}
+        zoomRange={[0.1, 5]}
+        onPinch={(e) => {
+          if (!isPreview) setZoom(e.zoom);
+        }}
+        onScroll={(e) => {
+          const zoom = viewerRef.current?.getZoom();
+          horizontalGuidesRef.current?.scroll(e.scrollLeft, zoom);
+          horizontalGuidesRef.current?.scrollGuides(e.scrollTop, zoom);
+          verticalGuidesRef.current?.scroll(e.scrollTop, zoom);
+          verticalGuidesRef.current?.scrollGuides(e.scrollLeft, zoom);
+        }}
+      >
+        <div
+          id={"rem-content"}
+          ref={contentRef}
+          className={`rem-elements selecto-area`}
+          style={contentStyle}
         >
-          <Guides
-            ref={horizontalGuidesRef}
-            type="horizontal"
-            displayDragPos={true}
-            displayGuidePos={true}
-            useResizeObserver={true}
-          />
-        </animated.div>
-
-        <animated.div
-          style={leftStyle}
-          className={
-            "absolute left-0px top-30px w-30px h-[calc(100vh-30px)] z-1"
-          }
-        >
-          <Guides
-            ref={verticalGuidesRef}
-            type="vertical"
-            displayDragPos={true}
-            displayGuidePos={true}
-            useResizeObserver={true}
-          />
-        </animated.div>
-
-        {!isPreview && (
-          <InfiniteViewer
-            className={"w-full h-full relative bg-#333 br-0"}
-            ref={viewerRef}
-            margin={0}
-            threshold={0}
-            displayHorizontalScroll={false}
-            displayVerticalScroll={false}
-            useMouseDrag={isKeyDown}
-            useWheelScroll={true}
-            useAutoZoom={true}
-            zoomRange={[0.1, 10]}
-            maxPinchWheel={10}
-            onScroll={(e) => {
-              const zoom = viewerRef.current?.getZoom();
-              setZoom(zoom || 1);
-              horizontalGuidesRef.current?.scroll(e.scrollLeft, zoom);
-              horizontalGuidesRef.current?.scrollGuides(e.scrollTop, zoom);
-              verticalGuidesRef.current?.scroll(e.scrollTop, zoom);
-              verticalGuidesRef.current?.scrollGuides(e.scrollLeft, zoom);
-            }}
+          <Dropdown
+            menu={{ items, onClick }}
+            trigger={["contextMenu"]}
+            open={openContextMenu}
+            onOpenChange={handleContextMenu}
           >
-            <div
-              id={"rem-content"}
-              ref={contentRef}
-              className={`rem-elements selecto-area`}
-              style={contentStyle}
-            >
-              <Dropdown
-                menu={{ items, onClick }}
-                trigger={["contextMenu"]}
-                open={openContextMenu}
-                onOpenChange={handleContextMenu}
-              >
-                {children}
-              </Dropdown>
-              <Movable />
-            </div>
-          </InfiniteViewer>
-        )}
-      </div>
+            {children}
+          </Dropdown>
+          <Movable
+            scrollOptions={scrollOptions}
+            onScroll={({ direction }: any) => {
+              viewerRef.current!.scrollBy(direction[0] * 10, direction[1] * 10);
+            }}
+          />
+        </div>
+      </InfiniteViewer>
 
-      {isPreview ? (
-        children
-      ) : (
-        <animated.div
+      {/* <animated.div
           style={footerStyle}
           className={
             "bg-white w-full border-t-1 border-b-gray-200 flex flex-justify-end"
@@ -371,14 +424,13 @@ export default function Content(props: React.PropsWithChildren) {
             }}
             bordered={false}
           />
-        </animated.div>
-      )}
+        </animated.div> */}
 
-      {!init && (
+      {/* {!init && (
         <div className="absolute left-0 top-0 w-400px bg-white justify-self-stretch self-cente z-1">
           <Guide />
         </div>
-      )}
+      )} */}
     </>
   );
 }

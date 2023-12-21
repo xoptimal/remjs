@@ -61,7 +61,9 @@ const snapDirections = {
   middle: true,
 };
 
-export default function Movable() {
+export default function Movable(props: any) {
+  const { scrollOptions, onScroll } = props;
+
   const { emitter, target, setTarget } = useContext(NodeContext);
   const { onChange } = useContext(NodeContext);
 
@@ -320,6 +322,8 @@ export default function Movable() {
           dimensionViewable: true,
           enterLeave: true,
         }}
+        scrollOptions={scrollOptions}
+        onScroll={onScroll}
         onClickGroup={(e) => {
           if (!e.moveableTarget) {
             setSelectedTargets([]);

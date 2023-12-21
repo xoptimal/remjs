@@ -30,6 +30,10 @@ a {
   display: inline-block;
 }
 
+.rem-container {
+  /* margin: 0 auto !important; */
+}
+
 /* #rem-content *:hover {
   cursor: url(/svg/mouse_active.svg), auto;
 }

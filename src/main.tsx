@@ -86,7 +86,7 @@ const App = () => {
                 const a1= "bg-red translate-x-[0px] translate-y-[0px]"    
             
                 return (
-                    <div className="w-[393px] h-[5852px] bg-[#000] relative">
+                    <div className="w-[393px] h-[5852px] bg-[#fff] relative">
                         <h2 className={a1}>Counter, sdas qwed,qdqwnindasdian asdas</h2>
                         <p className={"bg-blue"}>{a1}=========123123=======<span>12312</span></p>
                         <button className={style} onClick={increment}>Increment</button>
