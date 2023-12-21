@@ -42,7 +42,7 @@ export default function () {
 
   return (
     <Row gutter={[16, 16]} className={"px-16px"}>
-      {list.map((item) => {
+      {/* {list.map((item) => {
         return (
           <Col span={12} key={item.key}>
             <Card
@@ -57,7 +57,7 @@ export default function () {
             </Card>
           </Col>
         );
-      })}
+      })} */}
     </Row>
   );
 }

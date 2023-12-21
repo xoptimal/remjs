@@ -146,6 +146,7 @@ const Core: React.FC<CoreProps> = (props) => {
 
   useAsyncEffect(async () => {
     if (data) {
+     
       //  发送一个初始化的消息
       if (elementsRef.current) {
         emitter.emit({ type: EventType.INIT });
@@ -298,9 +299,16 @@ const Core: React.FC<CoreProps> = (props) => {
     return null;
   }, [elements]);
 
+  const [isPreview, setPreview] = React.useState(true);
+
+  const onPreview = () => {
+    setPreview(!isPreview);
+  };
+
   return (
     <NodeContext.Provider
       value={{
+        isPreview,
         target,
         setTarget: handleSetTarget,
         onChange: handleChangeTarget,
@@ -329,6 +337,8 @@ const Core: React.FC<CoreProps> = (props) => {
                         />
                     </div>*/}
           <Space>
+            <Button onClick={onCancel}>预览代码</Button>
+            <Button onClick={onPreview}>{isPreview ? "编辑" : "预览"}</Button>
             <Button onClick={onCancel}>取消</Button>
             <Button
               style={{ background: "white" }}

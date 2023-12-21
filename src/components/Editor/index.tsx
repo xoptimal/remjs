@@ -1,18 +1,17 @@
 import {
-    BackgroundPanel,
-    BorderPanel,
-    Content,
-    LayoutPanel,
-    MPPanel,
-    Typography,
+  BackgroundPanel,
+  BorderPanel,
+  Content,
+  LayoutPanel,
+  MPPanel,
+  Typography,
 } from "@/components";
 import ActionBar from "@/components/ActionBar";
-import {
-    CodeOutlined,
-    HighlightOutlined
-} from "@ant-design/icons";
+import NodeContext from "@/context";
+import { CodeOutlined, HighlightOutlined } from "@ant-design/icons";
+import { animated, useSpring } from "@react-spring/web";
 import { Collapse, Tabs } from "antd";
-import React from "react";
+import React, { useContext } from "react";
 import Layers from "../Layers";
 import "./index.css";
 
@@ -58,7 +57,11 @@ export default function Editor(props: any) {
       label: <IconText icon={<HighlightOutlined />} text={"样式"} />,
       key: "panel",
       children: (
-        <Collapse activeKey={rightActivities} onChange={setRightActivities} className="h-[calc(100vh-550px)] overflow-y-auto">
+        <Collapse
+          activeKey={rightActivities}
+          onChange={setRightActivities}
+          className="h-[calc(100vh-550px)] overflow-y-auto"
+        >
           <CollapsePanel header="Layout" key="Layout">
             <LayoutPanel />
           </CollapsePanel>
@@ -81,31 +84,44 @@ export default function Editor(props: any) {
       ),
     },
   ];
+  const { isPreview } = useContext(NodeContext);
+
+  const leftStyle = useSpring({
+    from: { width: 0, opacity: 0 },
+    to: {
+      width: !isPreview ? 48 : 0,
+      opacity: !isPreview ? 1 : 0,
+    },
+    delay: isPreview ? 500 : 50,
+  });
+
+  const rightStyle = useSpring({
+    from: { width: 0, opacity: 0 },
+    to: {
+      width: !isPreview ? 357 : 0,
+      opacity: !isPreview ? 1 : 0,
+    },
+    delay: isPreview ? 500 : 50,
+  });
 
   return (
-    <div className={"flex"}>
-      <div className={"h-[calc(100vh-50px)"}>
+    <div className={"flex h-[calc(100vh-50px)] w-full overflow-hidden"}>
+      <animated.div style={leftStyle} className={"h-[calc(100vh-50px)]"}>
         <ActionBar />
-      </div>
-      {/* <div
-                className={
-                    "h-[calc(100vh-50px)] w-[370px] border-r-[1px] border-b-gray-200"
-                }
-            >
-                <Tabs
-                    className={"rem-device-tab border-b-[1px] border-b-gray-200"}
-                    defaultActiveKey="Layers"
-                    items={leftItems}
-                />
-            </div> */}
+      </animated.div>
       <div
         className={
-          "h-[calc(100vh-50px)] w-[calc(100vw-357px)] bg-red relative flex flex-col justify-center"
+          isPreview
+            ? "h-[calc(100vh-50px)] flex-1 bg-[#ebeced] relative overflow-y-auto"
+            : "h-[calc(100vh-50px)] flex-1 bg-[#ebeced] relative"
         }
       >
         <Content>{props.children}</Content>
       </div>
-      <div className="h-[calc(100vh-50px)] w-[357px] border-l-[1px] border-b-gray-200">
+      <animated.div
+        style={rightStyle}
+        className="border-l-[1px] border-b-gray-200 h-[calc(100vh-50px)]"
+      >
         <Tabs
           style={{ height: `calc(100vh - 550px)`, overflow: "hidden" }}
           defaultActiveKey={"panel"}
@@ -116,7 +132,7 @@ export default function Editor(props: any) {
           <span>图层</span>
           <Layers treeData={treeData} />
         </div>
-      </div>
+      </animated.div>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import {
   Square,
   Squircle,
   TextCursorInput,
+  Video,
+  Image
 } from "lucide-react";
 import React, { useContext, useState } from "react";
 
@@ -189,9 +191,30 @@ export default function ActionBar() {
         text: "请输入文本内容",
       },
     },
+    
+    {
+      key: "image",
+      type: EventType.PAINTING,
+      label: "图片",
+      icon: <Image size={18} />,
+      data: {
+        source: "span",
+        text: "请输入文本内容",
+      },
+    },
+     {
+      key: "video",
+      type: EventType.PAINTING,
+      label: "视频",
+      icon: <Video size={18} />,
+      data: {
+        source: "span",
+        text: "请输入文本内容",
+      },
+    },
     {
       key: "antd",
-      type: EventType.ACTION_ANTDESIGN,
+      type: EventType.PAINTING,
       label: "Ant Design 组件",
       icon: renderMoreItem(
         <img className="w-18px h-18px" src="svg/antd.svg" />

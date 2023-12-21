@@ -12,7 +12,8 @@ import InfiniteViewer from "react-infinite-viewer";
 import { Guide, Movable } from "@/components";
 import NodeContext, { EventType } from "@/context";
 import useKeyDown from "@/hooks/useKeyDown";
-import { useAsyncEffect, useEventListener, useGetState } from "ahooks";
+import { animated, useSpring } from "@react-spring/web";
+import { useAsyncEffect, useGetState } from "ahooks";
 
 const deviceList = [
   { label: <DesktopOutlined />, key: "pc", width: 1000 },
@@ -83,7 +84,7 @@ export default function Content(props: React.PropsWithChildren) {
 
   const [openContextMenu, setOpenContextMenu] = useState(false);
 
-  const { target, emitter, onChange } = useContext(NodeContext);
+  const { target, emitter, onChange, isPreview } = useContext(NodeContext);
 
   const [children, setChildren] = useState<React.ReactNode>(<Fragment />);
 
@@ -195,12 +196,6 @@ export default function Content(props: React.PropsWithChildren) {
     }, 0);
   }
 
-  const [mousedown, setMousedown] = useState<MouseDown>({
-    down: false,
-    offsetX: 0,
-    offsetY: 0,
-  });
-
   const onClick: MenuProps["onClick"] = (e) => {
     if (!target) return;
 
@@ -235,16 +230,49 @@ export default function Content(props: React.PropsWithChildren) {
     });
   };
 
+  const footerStyle = useSpring({
+    from: { height: 0 },
+    to: {
+      height: isPreview ? 0 : 30,
+    },
+    delay: isPreview ? 50 : 500,
+  });
+
+  const leftStyle = useSpring({
+    from: { width: 0, left: -30 },
+    to: {
+      left: isPreview ? -30 : 0,
+      width: isPreview ? 0 : 30,
+    },
+    delay: isPreview ? 50 : 500,
+  });
+
+  const topStyle = useSpring({
+    from: { height: 0, top: -30 },
+    to: {
+      height: isPreview ? 0 : 30,
+      top: isPreview ? -30 : 0,
+    },
+    delay: isPreview ? 50 : 500,
+  });
+
   return (
-    <>
+    isPreview? children:
       <div
         className={
-          "relative w-full h-full overscroll-none preserve-3d bd-0 overflow-hidden bg-#ebeced"
+          "relative w-full h-full overscroll-none preserve-3d bd-0 overflow-hidden"
         }
-        style={{ cursor: isKeyDown ? "grab" : "auto" }}
+        //style={{ cursor: isKeyDown ? "grab" : "auto" }}
       >
-        <div className={"relative w-30px h-30px bg-#444 box-border z-21"}></div>
-        <div className={"absolute top-0 left-30px w-full h-30px z-1"}>
+        <animated.div
+          style={topStyle}
+          className={"absolute w-30px h-30px bg-#444 box-border z-1"}
+        ></animated.div>
+
+        <animated.div
+          style={topStyle}
+          className={"absolute top-0 left-30px w-full h-30px z-1"}
+        >
           <Guides
             ref={horizontalGuidesRef}
             type="horizontal"
@@ -252,10 +280,12 @@ export default function Content(props: React.PropsWithChildren) {
             displayGuidePos={true}
             useResizeObserver={true}
           />
-        </div>
-        <div
+        </animated.div>
+
+        <animated.div
+          style={leftStyle}
           className={
-            "absolute left-0px top-30px w-30px h-[calc(100vh-30px)] z-2331 bg-[#ff0ff0]"
+            "absolute left-0px top-30px w-30px h-[calc(100vh-30px)] z-1"
           }
         >
           <Guides
@@ -265,80 +295,87 @@ export default function Content(props: React.PropsWithChildren) {
             displayGuidePos={true}
             useResizeObserver={true}
           />
-        </div>
+        </animated.div>
 
-        <InfiniteViewer
-          className={"w-full h-full relative bg-#333 br-0"}
-          ref={viewerRef}
-          margin={0}
-          threshold={0}
-          displayHorizontalScroll={false}
-          displayVerticalScroll={false}
-          useMouseDrag={isKeyDown}
-          useWheelScroll={true}
-          useAutoZoom={true}
-          zoomRange={[0.1, 10]}
-          maxPinchWheel={10}
-          onScroll={(e) => {
-            const zoom = viewerRef.current?.getZoom();
-            setZoom(zoom || 1);
-            horizontalGuidesRef.current?.scroll(e.scrollLeft, zoom);
-            horizontalGuidesRef.current?.scrollGuides(e.scrollTop, zoom);
-            verticalGuidesRef.current?.scroll(e.scrollTop, zoom);
-            verticalGuidesRef.current?.scrollGuides(e.scrollLeft, zoom);
-          }}
-        >
-          <div
-            id={"rem-content"}
-            ref={contentRef}
-            className={`rem-elements selecto-area`}
-            style={contentStyle}
+        {!isPreview && (
+          <InfiniteViewer
+            className={"w-full h-full relative bg-#333 br-0"}
+            ref={viewerRef}
+            margin={0}
+            threshold={0}
+            displayHorizontalScroll={false}
+            displayVerticalScroll={false}
+            useMouseDrag={isKeyDown}
+            useWheelScroll={true}
+            useAutoZoom={true}
+            zoomRange={[0.1, 10]}
+            maxPinchWheel={10}
+            onScroll={(e) => {
+              const zoom = viewerRef.current?.getZoom();
+              setZoom(zoom || 1);
+              horizontalGuidesRef.current?.scroll(e.scrollLeft, zoom);
+              horizontalGuidesRef.current?.scrollGuides(e.scrollTop, zoom);
+              verticalGuidesRef.current?.scroll(e.scrollTop, zoom);
+              verticalGuidesRef.current?.scrollGuides(e.scrollLeft, zoom);
+            }}
           >
-            <Dropdown
-              menu={{ items, onClick }}
-              trigger={["contextMenu"]}
-              open={openContextMenu}
-              onOpenChange={handleContextMenu}
+            <div
+              id={"rem-content"}
+              ref={contentRef}
+              className={`rem-elements selecto-area`}
+              style={contentStyle}
             >
-              {children}
-            </Dropdown>
-            <Movable  />
-          </div>
-        </InfiniteViewer>
+              <Dropdown
+                menu={{ items, onClick }}
+                trigger={["contextMenu"]}
+                open={openContextMenu}
+                onOpenChange={handleContextMenu}
+              >
+                {children}
+              </Dropdown>
+              <Movable />
+            </div>
+          </InfiniteViewer>
+        )}
       </div>
 
-      <div
-        className={
-          "bg-white w-full border-t-1 border-b-gray-200 flex flex-justify-end"
-        }
-      >
-        <InputNumber
-          size={"small"}
-          step={10}
-          min={10}
-          max={100}
-          value={Math.floor(zoom * 100)}
-          formatter={(value) => `${value}%`}
-          parser={(value) => value!.replace("%", "") as any}
-          onPressEnter={(event) => {
-            const target = event.target as any;
-            let value = target.value;
-            if (value.length > 0) {
-              if (value.indexOf("%") > -1) {
-                value = value.substring(0, value.length - 1);
+      {isPreview ? (
+        children
+      ) : (
+        <animated.div
+          style={footerStyle}
+          className={
+            "bg-white w-full border-t-1 border-b-gray-200 flex flex-justify-end"
+          }
+        >
+          <InputNumber
+            size={"small"}
+            step={10}
+            min={10}
+            max={100}
+            value={Math.floor(zoom * 100)}
+            formatter={(value) => `${value}%`}
+            parser={(value) => value!.replace("%", "") as any}
+            onPressEnter={(event) => {
+              const target = event.target as any;
+              let value = target.value;
+              if (value.length > 0) {
+                if (value.indexOf("%") > -1) {
+                  value = value.substring(0, value.length - 1);
+                }
               }
-            }
-            const zoom = value / 100;
-            setZoom(zoom);
-            viewerRef.current?.setZoom(zoom);
-            viewerRef.current?.scrollCenter();
-          }}
-          bordered={false}
-        />
-      </div>
+              const zoom = value / 100;
+              setZoom(zoom);
+              viewerRef.current?.setZoom(zoom);
+              viewerRef.current?.scrollCenter();
+            }}
+            bordered={false}
+          />
+        </animated.div>
+      )}
 
       {!init && (
-        <div className="absolute w-400px bg-white justify-self-stretch self-center">
+        <div className="absolute left-0 top-0 w-400px bg-white justify-self-stretch self-cente z-1">
           <Guide />
         </div>
       )}

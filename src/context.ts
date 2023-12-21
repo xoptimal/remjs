@@ -34,10 +34,10 @@ export enum EventType {
   SEL_ELELEMT_TO_TREE,
 
   // 待定
-  GRAB,
-  ACTION_ANTDESIGN,
-  ADD_TEXT,
   ADD_LAYOUT,
+
+  //  预览
+  PREVIEW
 } 
 
 export type EventProps<T = any> = { type: EventType;
@@ -62,12 +62,14 @@ export type NodeContextType = {
     callback?: () => void
   ) => void;
   emitter: EventEmitter<EventProps>;
+  isPreview: boolean
 };
 
 const NodeContext = React.createContext<NodeContextType>({
   setTarget: () => {},
   onChange: () => {},
   emitter: {} as any,
+  isPreview: false
 });
 
 export default NodeContext;

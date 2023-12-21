@@ -1,4 +1,4 @@
-import React, { Key, useContext, useEffect, useRef, useState } from "react";
+import React, { Key, useContext, useEffect, useState } from "react";
 import NodeContext, { EventType } from "@/context";
 import { Tree, TreeProps } from "antd";
 
@@ -25,6 +25,11 @@ export default function Layers(props: any) {
       });
       setSelectedKeys(arr);
     }
+
+    if (type === EventType.INIT) {
+      setExpandedKeys([]);
+      setSelectedKeys([]);
+    }
   });
 
   const onSelect: TreeProps["onSelect"] = (keys) => {
@@ -39,27 +44,31 @@ export default function Layers(props: any) {
 
   const onRightClick = ({ node }: { node: any }) => {};
 
-  // const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (
+      treeData.length > 0 &&
+      treeData.length === 1 &&
+      expandedKeysValue.length === 0
+    ) {
+      setExpandedKeys([treeData[0].key]);
+    }
+  }, [treeData]);
 
-  // const [height, setHeight] = useState(0);
-
-  // useEffect(() => {
-  //   setHeight(ref.current?.clientHeight || 0);
-  // }, []);
-
-  return treeData.length > 0 &&(
-    <DirectoryTree
-      multiple
-      height={500}
-      showIcon={false}
-      autoExpandParent
-      onRightClick={onRightClick}
-      expandedKeys={expandedKeysValue}
-      defaultExpandAll
-      onExpand={onExpand}
-      onSelect={onSelect}
-      selectedKeys={selectedKeys}
-      treeData={treeData}
-    />
+  return (
+    treeData.length > 0 && (
+      <DirectoryTree
+        multiple
+        height={500}
+        showIcon={false}
+        autoExpandParent
+        onRightClick={onRightClick}
+        expandedKeys={expandedKeysValue}
+        defaultExpandAll
+        onExpand={onExpand}
+        onSelect={onSelect}
+        selectedKeys={selectedKeys}
+        treeData={treeData}
+      />
+    )
   );
 }
