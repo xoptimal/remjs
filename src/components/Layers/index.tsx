@@ -1,6 +1,6 @@
-import React, { Key, useContext, useEffect, useState } from "react";
 import NodeContext, { EventType } from "@/context";
 import { Tree, TreeProps } from "antd";
+import React, { Key, useContext, useEffect, useState } from "react";
 
 const { DirectoryTree } = Tree;
 
@@ -10,7 +10,7 @@ export default function Layers(props: any) {
   const [expandedKeysValue, setExpandedKeys] = useState<Key[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
-  const { emitter } = useContext(NodeContext);
+  const { emitter, getParent } = useContext(NodeContext);
 
   emitter.useSubscription(({ type, nodeIds }) => {
     if (type === EventType.SEL_ELELEMT_TO_TREE) {
@@ -23,6 +23,19 @@ export default function Layers(props: any) {
           arr.push(item);
         }
       });
+
+      const parents = new Set<string>();
+
+      arr.forEach((key) => {
+        let id = getParent(key as string)?.parentId;
+      
+        while (id) {
+          parents.add(id);
+          id = getParent(id)?.parentId;
+        }
+      });
+
+      setExpandedKeys([...parents])
       setSelectedKeys(arr);
     }
 

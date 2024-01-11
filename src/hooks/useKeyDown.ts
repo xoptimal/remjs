@@ -1,7 +1,9 @@
 import { useKeyPress } from "ahooks";
 import { useState } from "react";
 
-export default function useKeyDown(filterKey: string | string[]) {
+export default function useKeyDown(
+  filterKey: string | string[]
+): [isKeyDown: boolean, key: string | null] {
   const [key, setKey] = useState<string | null>(null);
 
   useKeyPress(
@@ -9,6 +11,7 @@ export default function useKeyDown(filterKey: string | string[]) {
     (event) => {
       if (event.type === "keydown") {
         setKey(event.code.toLocaleLowerCase());
+        event.preventDefault();
       } else {
         setKey(null);
       }
@@ -18,5 +21,5 @@ export default function useKeyDown(filterKey: string | string[]) {
     }
   );
 
-  return { isKeyDown: key !== null, key };
+  return [key !== null, key];
 }

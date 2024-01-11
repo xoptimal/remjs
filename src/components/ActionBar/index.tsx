@@ -85,6 +85,31 @@ const antdItems: any[] = [
   },
 ];
 
+const layoutItems :any[] = [
+  {
+    key: "flex",
+    type: EventType.PAINTING,
+    label: "Flex布局",
+    icon: <Layout size={14} />,
+    data: {
+      source: "div",
+      className: ["flex", "w-1px", "h-1px", "bg-[#cccccc]"],
+      isDraw: true,
+    },
+  },
+  {
+    key: "relative",
+    type: EventType.PAINTING,
+    label: "绝对布局",
+    icon: <Layout size={14} />,
+    data: {
+      source: "div",
+      className: ["relative", "w-1px", "h-1px", "bg-[#cccccc]"],
+      isDraw: true,
+    },
+  },
+]
+
 function getItemByPath(items: any[], keyPath: string[]) {
   const index = keyPath.length - 1;
 
@@ -151,7 +176,7 @@ export default function ActionBar() {
     });
 
     setSelectedKey([find.key]);
-    emitter.emit({ type: find.type, data: find.data });
+    emitter.emit({ type: find.type, data: {...find.data} });
   };
 
   const [items, setItems] = useState<any[]>([
@@ -162,13 +187,25 @@ export default function ActionBar() {
       icon: <MousePointer2 size={18} />,
     },
     {
-      key: "layout",
-      type: EventType.PAINTING,
-      label: "布局",
-      icon: <Layout size={18} />,
+      // key: "layout",
+      // type: EventType.PAINTING,
+      // label: "布局",
+      // icon: <Layout size={18} />,
+      ...layoutItems[0],
+      icon: (
+        <Dropdown
+          menu={{
+            items: layoutItems,
+            onClick: ({ key }) => onClickMenuItem(key, layoutItems, 1),
+          }}
+          trigger={["contextMenu"]}
+        >
+          {renderMoreItem(<Layout size={18} />)}
+        </Dropdown>
+      ),
     },
     {
-      ...(shapeItems[0] as any),
+      ...shapeItems[0],
       icon: (
         <Dropdown
           menu={{

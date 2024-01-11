@@ -77,7 +77,7 @@ export default function Content(props: React.PropsWithChildren) {
 
   const viewerRef = React.useRef<InfiniteViewer>(null);
 
-  // const { isKeyDown } = useKeyDown("space");
+  const [isKeyDown] = useKeyDown("space");
 
   const [device, setDevice] = useState(0);
 
@@ -105,6 +105,7 @@ export default function Content(props: React.PropsWithChildren) {
 
     if (type === EventType.PAINTING) {
       paintingRef.current = data;
+      console.log("paintingRef.current", paintingRef.current);
     }
 
     //  重制状态
@@ -202,14 +203,16 @@ export default function Content(props: React.PropsWithChildren) {
     }
   }, [childrenProps]);
 
-  useKeyPress("space", (event) => {
-    viewerRef.current?.setZoom(1);
-    const containerWidth = viewerRef.current?.getContainer().clientWidth || 0;
-    const scrollLeft = (containerWidth - contentRef.current!.clientWidth) / 2;
-    viewerRef.current?.scrollTo(-scrollLeft, -240);
+  // const [isSpace, setIsSpace] = useState(false);
 
-    event.preventDefault();
-  });
+  // useKeyPress("space", (event) => {
+  //   // viewerRef.current?.setZoom(1);
+  //   // const containerWidth = viewerRef.current?.getContainer().clientWidth || 0;
+  //   // const scrollLeft = (containerWidth - contentRef.current!.clientWidth) / 2;
+  //   // viewerRef.current?.scrollTo(-scrollLeft, -240);
+  //   setIsSpace(true)
+  //   event.preventDefault();
+  // });
 
   // function resize() {
   //   const containerWidth = viewerRef.current?.getContainerWidth() || 0;
@@ -311,7 +314,7 @@ export default function Content(props: React.PropsWithChildren) {
         className={
           "relative w-full h-full overscroll-none preserve-3d bd-0 overflow-hidden"
         }
-        //style={{ cursor: isKeyDown ? "grab" : "auto" }}
+        style={{ cursor: isKeyDown ? "grab" : "auto" }}
       > */}
 
       <animated.div
@@ -348,21 +351,19 @@ export default function Content(props: React.PropsWithChildren) {
       </animated.div>
 
       <InfiniteViewer
-        className={"w-full h-full relative bg-#333 br-0"}
+        className={"w-full h-full bg-#333"}
         ref={viewerRef}
-        // margin={0}
-        // threshold={0}
-        // rangeX={[0, 0]}
-        // rangeY={[0, 0]}
-        //threshold={20}
-        // displayHorizontalScroll={true}
-        // displayVerticalScroll={true}
-        //usePinch={!isPreview}
+        displayHorizontalScroll={true}
+        displayVerticalScroll={true}
         maxPinchWheel={10}
+        useGesture={false}
         zoom={zoom}
         zoomRange={[0.1, 5]}
+        useMouseDrag={isKeyDown}
         onPinch={(e) => {
-          if (!isPreview) setZoom(e.zoom);
+          if (!isPreview) {
+            setZoom(e.zoom);
+          }
         }}
         onScroll={(e) => {
           const zoom = viewerRef.current?.getZoom();
@@ -386,12 +387,17 @@ export default function Content(props: React.PropsWithChildren) {
           >
             {children}
           </Dropdown>
-          <Movable
-            scrollOptions={scrollOptions}
-            onScroll={({ direction }: any) => {
-              viewerRef.current!.scrollBy(direction[0] * 10, direction[1] * 10);
-            }}
-          />
+          {!isPreview && (
+            <Movable
+              scrollOptions={scrollOptions}
+              onScroll={({ direction }: any) => {
+                viewerRef.current!.scrollBy(
+                  direction[0] * 10,
+                  direction[1] * 10
+                );
+              }}
+            />
+          )}
         </div>
       </InfiniteViewer>
 

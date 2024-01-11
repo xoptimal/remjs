@@ -63,11 +63,13 @@ export type NodeContextType = {
   ) => void;
   emitter: EventEmitter<EventProps>;
   isPreview: boolean
+  getParent: (id: string) => any
 };
 
 const NodeContext = React.createContext<NodeContextType>({
   setTarget: () => {},
   onChange: () => {},
+  getParent: () => {},
   emitter: {} as any,
   isPreview: false
 });

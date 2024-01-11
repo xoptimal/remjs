@@ -64,7 +64,7 @@ const snapDirections = {
 export default function Movable(props: any) {
   const { scrollOptions, onScroll } = props;
 
-  const { emitter, target, setTarget } = useContext(NodeContext);
+  const { emitter, target, setTarget, getParent } = useContext(NodeContext);
   const { onChange } = useContext(NodeContext);
 
   const [targets, setTargets] = useState<HTMLElement[]>([]);
@@ -76,7 +76,7 @@ export default function Movable(props: any) {
   const groupManagerRef = useRef<GroupManager>();
   const rootContainerRef = useRef<HTMLElement | null>(null);
 
-  const { isKeyDown, key } = useKeyDown(["meta", "shift", "space"]);
+  const [isKeyDown, key] = useKeyDown(["meta", "shift", "space"]);
 
   useEffect(() => {
     rootContainerRef.current = document.querySelector(rootContainer);
@@ -131,6 +131,7 @@ export default function Movable(props: any) {
     "mousedown",
     (e) => {
       if (paintingRef.current) {
+
         const offsetX =
           e.clientX - rootContainerRef.current!.getBoundingClientRect().left;
         const offsetY =
@@ -140,11 +141,10 @@ export default function Movable(props: any) {
 
         emitter.emit({
           type: EventType.ADD_ELEMENT,
-          data: { position, ...paintingRef.current },
+          data: { position, parentId: findKeyByClassName(e.target.className), ...paintingRef.current },
         });
 
         if (paintingRef.current.isDraw) {
-          //setMousedown({ down: true, offsetX: e.clientX, offsetY: e.clientY });
           paintingRef.current.offsetX = e.clientX;
           paintingRef.current.offsetY = e.clientY;
         }
@@ -162,7 +162,8 @@ export default function Movable(props: any) {
         (event.buttons === 1 || event.which === 1) &&
         paintingRef.current?.isDraw &&
         target
-      ) {
+      ) {        
+
         const deltaX = event.clientX - paintingRef.current.offsetX;
         const deltaY = event.clientY - paintingRef.current.offsetY;
 
@@ -194,8 +195,10 @@ export default function Movable(props: any) {
 
           if (style.height.length === 0 && style.width.length === 0) {
             className = [`w-[100px]`, `h-[100px]`];
+ 
+            const parentIsRelative = target.parentId && getParent(target.parentId).className.findIndex((find: string) => find === "relative") > -1
 
-            if (target.position) {
+            if ( target.position && parentIsRelative) {
               movableRef.current!.request("draggable", {
                 isInstant: true,
                 x: target.position.x - 50,
@@ -203,6 +206,11 @@ export default function Movable(props: any) {
               });
             }
           }
+
+
+          console.log("up classname", className);
+          console.log("up mutuallyExclusives", mutuallyExclusives);
+          
 
           onChange({ className, mutuallyExclusives });
         } else {

@@ -422,10 +422,10 @@ export function traversalChildren(
           text = elements[id].text;
         }
 
-        // if (Node.type === "span" || Node.type === "a") {
-        //   //  特殊处理
-        //   classNameList.push("inline-block");
-        // }
+        if (Node.type === "span" || Node.type === "a") {
+          //  特殊处理
+          classNameList.push("inline-block");
+        }
 
         // else if (Node.type === "input") {
         //     value = Node.props.value || children;
@@ -723,7 +723,7 @@ export function createCanvas(canvas: CanvasType) {
   
     import React from 'react'
     export default function TempCanvas() { return (
-      <div className="w-[500px] h-[500px] bg-[#fff]">
+      <div className="w-[500px] h-[500px] bg-[#fff] relative">
 
 
 
@@ -733,74 +733,59 @@ export function createCanvas(canvas: CanvasType) {
   `;
   return createElement({ path: "", content });
 
-  // const uuid = new Date().getTime();
-  // const root = <div className={clsx(uuid)}/>
-  // return {
-  //     elements: {
-  //         [uuid]: {
-  //             className: [uuid, "w-500px", "h-500px", "bg-[#fff]"],
-  //             style: {},
-  //             type: 'div',
-  //             text: null,
-  //             children: [],
-  //         }
-  //     },
-  //     children: root
-  // }
 }
 
-// export function createRectView(parentId: string, data: any): ExtensionElement {
-//   const uuid = `remKey-${new Date().getTime()}`;
-//   const className = [uuid, ];
-//   return {
-//       id: uuid,
-//       parentId,
-//       className,
-//       style: {
-//         transform: `translate(${data.position.x}px, ${data.position.y}px)`,
-//       },
-//       props: {
-//         className: uuid + " " + className.join(" "),
-//         style: {
-//           transform: `translate(${data.position.x}px, ${data.position.y}px)`,
-//         },
-//       },
-//       source: "div",
-//       children: [],
-//   };
-// }
+export function getRandomHexColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
-export function createExtensionElement(parentId: string, data: any) {
+
+export function createExtensionElement(data: any, elements: any) {
   const uuid = `remKey-${new Date().getTime()}`;
-  const className = [];
-  if (data.position) {
+  const className: string[] = data.className || [];
+
+  const style: CSSProperties = {};
+
+  console.log("data.parentId", data.parentId );
+  console.log("elements[data.parentId].className", elements[data.parentId].className);
+  
+  //  针对容器=relative, 开启绝对定位功能
+  if(elements[data.parentId].className.findIndex((find: string) => find === "relative") > -1 && data.position) {
     className.push(`absolute`, "left-0", "top-0");
+    style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
   }
 
-  if (data.className) {
-    className.push(...data.className);
-  }
-
+  console.log("data", data);
+  console.log("add className", className);
+  console.log("add style", style);
+  
   return {
     id: uuid,
-    parentId,
+    parentId: data.parentId,
     selected: true,
     position: data.position,
     text: data.text,
     className,
     source: data.source,
-    style: {
-      transform: `translate(${data.position.x}px, ${data.position.y}px)`,
-    },
+    children: [],
+    style,
     props: {
       className: uuid + " " + className.join(" "),
-      style: {
-        transform: `translate(${data.position.x}px, ${data.position.y}px)`,
-      },
+      style,
     },
   };
 }
 
+/**
+ * 从className中获取key
+ * @param className
+ * @returns
+ */
 export function findKeyByClassName(className: string | string[]): string {
   if (Array.isArray(className)) {
     return className.find((item) => item.indexOf("remKey-") > -1)!;

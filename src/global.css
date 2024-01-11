@@ -27,7 +27,7 @@ a {
 
 #rem-content * {
   transition: none;
-  display: inline-block;
+  /* display: inline-block; */
 }
 
 .rem-container {

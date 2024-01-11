@@ -26,6 +26,7 @@ import {
 import { Button, Divider, Space, message } from "antd";
 import React, { ComponentType, useMemo, useRef, useState } from "react";
 import NodeContext, { EventProps, EventType, NodeContextType } from "./context";
+import { log } from "console";
 
 interface CoreProps {
   file?: FileType;
@@ -111,12 +112,17 @@ const Core: React.FC<CoreProps> = (props) => {
       //   break;
       case EventType.ADD_ELEMENT:
         {
-          const firstPropertyId = Object.keys(elementsRef.current)[0];
-          const element = createExtensionElement(firstPropertyId, data);
+
+          console.log("=============data", {...data});
+
+          const element = createExtensionElement(data, elementsRef.current);
+
+          console.log("===========add", element);
+
 
           setElements((prev) => {
             const temp = { ...prev };
-            temp[firstPropertyId].children.push(element);
+            temp[data.parentId].children.push(element);
             temp[element.id] = element;
 
             //  sync
@@ -299,12 +305,14 @@ const Core: React.FC<CoreProps> = (props) => {
     return null;
   }, [elements]);
 
-  const [isPreview, setPreview] = React.useState(true);
+  const [isPreview, setPreview] = React.useState(false);
 
   const onPreview = () => {
     setPreview(!isPreview);
   };
 
+  console.log("elements", elements);
+  
   return (
     <NodeContext.Provider
       value={{
@@ -313,6 +321,9 @@ const Core: React.FC<CoreProps> = (props) => {
         setTarget: handleSetTarget,
         onChange: handleChangeTarget,
         emitter,
+        getParent:(id: string)=>{
+          return elements[id]
+        }
       }}
     >
       <div className={"w-full h-full bg-white"}>
