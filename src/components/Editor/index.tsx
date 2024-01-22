@@ -1,9 +1,9 @@
 import {
-  BackgroundPanel,
-  BorderPanel,
+  Background,
+  Border,
   Content,
-  LayoutPanel,
-  MPPanel,
+  Layout,
+  MarginPadding,
   Typography,
 } from "@/components";
 import ActionBar from "@/components/ActionBar";
@@ -63,22 +63,22 @@ export default function Editor(props: any) {
           className="h-[calc(100vh-550px)] overflow-y-auto"
         >
           <CollapsePanel header="Layout" key="Layout">
-            <LayoutPanel />
+            <Layout />
           </CollapsePanel>
           {/* <Panel header="Visibility" key="Visibility">
                         <VisibilityPanel />
                       </Panel>*/}
           <CollapsePanel header="Background" key="Background">
-            <BackgroundPanel />
+            <Background />
           </CollapsePanel>
           <CollapsePanel header="Typography" key="Typography">
             <Typography />
           </CollapsePanel>
           <CollapsePanel header="Margin & Padding" key="Margin & Padding">
-            <MPPanel />
+            <MarginPadding />
           </CollapsePanel>
           <CollapsePanel header="Border" key="Border">
-            <BorderPanel />
+            <Border />
           </CollapsePanel>
         </Collapse>
       ),

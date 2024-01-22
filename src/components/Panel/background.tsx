@@ -15,7 +15,7 @@ const colorItems = (() => {
 
 const matchValue = (value: string) =>
   /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(value);
-export default function BackgroundPanel(props: any) {
+export default function Background(props: any) {
   return (
     <Row gutter={[0, 12]}>
       <Col span={24}>

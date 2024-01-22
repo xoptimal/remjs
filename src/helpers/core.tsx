@@ -751,19 +751,12 @@ export function createExtensionElement(data: any, elements: any) {
 
   const style: CSSProperties = {};
 
-  console.log("data.parentId", data.parentId );
-  console.log("elements[data.parentId].className", elements[data.parentId].className);
-  
   //  针对容器=relative, 开启绝对定位功能
   if(elements[data.parentId].className.findIndex((find: string) => find === "relative") > -1 && data.position) {
     className.push(`absolute`, "left-0", "top-0");
     style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
   }
 
-  console.log("data", data);
-  console.log("add className", className);
-  console.log("add style", style);
-  
   return {
     id: uuid,
     parentId: data.parentId,

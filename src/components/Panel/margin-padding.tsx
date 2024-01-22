@@ -83,7 +83,7 @@ export const Item = (props: any) => {
   );
 };
 
-export default function MPPanel() {
+export default function MarginPadding() {
   const { onChange, target } = useContext(NodeContext);
 
   const handleMarginSelect = (key: string, value: string) => {

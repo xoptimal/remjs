@@ -95,6 +95,9 @@ const layoutItems :any[] = [
       source: "div",
       className: ["flex", "w-1px", "h-1px", "bg-[#cccccc]"],
       isDraw: true,
+      attributes: [
+        {}
+      ]
     },
   },
   {

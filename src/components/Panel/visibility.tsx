@@ -35,7 +35,7 @@ import {List, ListItem, ListItemSecondaryAction, ListItemText, Switch} from '@mu
 import React from 'react';
 
 
-export default function VisibilityPanel() {
+export default function Visibility() {
     // @ts-ignore
     const [checked, setChecked] = React.useState(['wifi']);
 

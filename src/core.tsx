@@ -26,7 +26,6 @@ import {
 import { Button, Divider, Space, message } from "antd";
 import React, { ComponentType, useMemo, useRef, useState } from "react";
 import NodeContext, { EventProps, EventType, NodeContextType } from "./context";
-import { log } from "console";
 
 interface CoreProps {
   file?: FileType;

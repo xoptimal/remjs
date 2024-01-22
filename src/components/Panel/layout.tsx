@@ -1,30 +1,27 @@
-import React from "react";
 
+import InputItem from "@/components/InputItem";
+import { IconItem } from "@/components/Panel/typography";
+import { Button, Col, Row } from "antd";
 import {
   AlignCenterHorizontal,
-  AlignCenterVertical,
   AlignEndHorizontal,
   AlignHorizontalJustifyCenter,
   AlignHorizontalJustifyEnd,
   AlignHorizontalJustifyStart,
-  AlignStartHorizontal,
-  Italic,
+  AlignStartHorizontal
 } from "lucide-react";
-import { Button, Col, Row } from "antd";
-import InputItem from "@/components/InputItem";
-import { IconItem } from "@/components/Panel/Typography";
 import InputItemToDom from "../InputItem/InputItemToElement";
 
 const textStyles: any[] = [
   {
     placeholder: "WIDTH",
     tailwindPrefix: "w",
-    styleKey: 'width'
+    styleKey: "width",
   },
   {
     placeholder: "HEIGHT",
     tailwindPrefix: "h",
-    styleKey: 'height'
+    styleKey: "height",
   },
   {
     placeholder: "MAX WIDTH",
@@ -77,7 +74,7 @@ const layoutStyles: any[] = [
   },
 ];
 
-export default function LayoutPanel() {
+export default function Layout() {
   return (
     <Row gutter={[12, 12]}>
       <Col span={24}>
@@ -86,8 +83,7 @@ export default function LayoutPanel() {
         </Button.Group>
       </Col>
       {textStyles.map((item, index) => {
-
-        if(item.tailwindPrefix === "h" || item.tailwindPrefix === "w") {
+        if (item.tailwindPrefix === "h" || item.tailwindPrefix === "w") {
           return (
             <Col span={12} key={item.tailwindPrefix}>
               <InputItemToDom

@@ -1,9 +1,9 @@
-import BackgroundPanel from './Panel/BackgroundPanel'
-import MPPanel from './Panel/MPPanel'
-import LayoutPanel from './Panel/LayoutPanel'
-import BorderPanel from './Panel/BorderPanel'
-import VisibilityPanel from './Panel/VisibilityPanel'
-import Typography from './Panel/Typography'
+import Background from './Panel/background'
+import MarginPadding from './Panel/margin-padding'
+import Layout from './Panel/layout'
+import Border from './Panel/border'
+import Visibility from './Panel/visibility'
+import Typography from './Panel/typography'
 import Content from './Content'
 import Ball from "./Ball";
 import ColorSelect from "./ColorSelect";
@@ -18,11 +18,11 @@ import CanvasModal from "./CanvasModal";
 import Guide from "./Guide";
 
 export {
-    MPPanel,
-    LayoutPanel,
-    BorderPanel,
-    VisibilityPanel,
-    BackgroundPanel,
+    MarginPadding,
+    Layout,
+    Border,
+    Visibility,
+    Background,
     Typography,
     Content,
     ColorSelect,

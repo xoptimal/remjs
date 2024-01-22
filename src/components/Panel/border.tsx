@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Col, Row } from "antd";
 import InputItem from "@/components/InputItem";
 import theme, { createColorItems } from "@/utils/theme";
-import { Item } from "@/components/Panel/MPPanel";
+import { Item } from "@/components/Panel/margin-padding";
 import ColorSelect from "@/components/ColorSelect";
 import NodeContext from "@/context";
 
@@ -10,7 +10,7 @@ const defaultStyle = `w-5 h-5 shadow-sm ring-1 ring-slate-900/5 border-indigo-50
 
 const tailwindPrefix = "border";
 
-export default function BorderPanel() {
+export default function Border() {
   const { onChange, target } = useContext(NodeContext);
 
   const handleSelect = (key: string, value: string) => {
