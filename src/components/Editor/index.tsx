@@ -45,7 +45,7 @@ export default function Editor(props: any) {
 
   const [rightActivities, setRightActivities] = React.useState<
     string | string[]
-  >(["Border"]);
+  >([]);
 
   const rightItems = [
     {
@@ -135,7 +135,7 @@ export default function Editor(props: any) {
           items={rightItems}
         />
         <div className="h-[500px] w-full overflow-hidden border-t-10px border-black">
-          <span>图层</span>
+          {/* <span>图层</span> */}
           <Layers treeData={treeData} />
         </div>
       </animated.div>
